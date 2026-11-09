@@ -15,7 +15,6 @@
 | Mod | Author |
 | --- | --- |
 | [AutoDrive Overdrive](https://github.com/DTM-Mods/FS25_AutoDrive) | Fennell |
-| [CourseCorrect](https://github.com/DTM-Mods/FS25_CourseCorrect) | Fennell |
 | [Searchables](https://github.com/DTM-Mods/FS25_Searchables) | Fennell |
 | [Logistics Hub](https://github.com/DTM-Mods/FS25_PalletDepot) | Fennell |
 | Deployables Anywhere | Fennell |
