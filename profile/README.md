@@ -14,7 +14,6 @@
 
 | Mod | Author |
 | --- | --- |
-| [AutoDrive Overdrive](https://github.com/DTM-Mods/FS25_AutoDrive) | Fennell |
 | [Searchables](https://github.com/DTM-Mods/FS25_Searchables) | Fennell |
 | [Logistics Hub](https://github.com/DTM-Mods/FS25_PalletDepot) | Fennell |
 | [Deployables Anywhere](https://github.com/DTM-Mods/FS25_DeployablesAnywhere) | Fennell |
@@ -37,7 +36,8 @@
 
 | Mod | Original |
 | --- | --- |
-| [Courseplay](https://github.com/DTM-Mods/FS25_Courseplay) | Courseplay devTeam |
+| [AutoDrive Overdrive](https://github.com/DTM-Mods/FS25_AutoDrive) | AutoDrive Team ([Stephan-S/FS25_AutoDrive](https://github.com/Stephan-S/FS25_AutoDrive)) |
+| [Courseplay](https://github.com/DTM-Mods/FS25_Courseplay) | Courseplay devTeam ([Courseplay/Courseplay_FS25](https://github.com/Courseplay/Courseplay_FS25)) |
 | [Better Contracts](https://github.com/DTM-Mods/FS25_BetterContracts) | [Mmtrx](https://github.com/Mmtrx/FS25_BetterContracts) |
 
 ### Bugs and requests
