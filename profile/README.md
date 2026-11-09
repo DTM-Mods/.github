@@ -22,10 +22,15 @@
 | Pallet Storage And Logistics | Fennell |
 | [F1 Toggle](https://github.com/DTM-Mods/FS25_F1Toggle) | Fennell |
 | [Recoup Money](https://github.com/DTM-Mods/FS25_RecoupMoney) | Fennell |
-| [No AI Collisions Pro Edition](https://github.com/PropaineX/FS25_NoAICollisions_ProEdition) | PropaineX |
-| [Parking Brake Pro Edition](https://github.com/PropaineX/FS25_ParkingBrake_ProEdition) | PropaineX |
-| [Player Trading+ Pro Edition](https://github.com/PropaineX/FS25_PlayerTradingPlus) | PropaineX |
-| [Box Truck Pro Edition](https://github.com/PropaineX/FS25_ProEdition_BoxTruck) (work in progress) | PropaineX |
+| [No AI Collisions Pro Edition](https://github.com/DTM-Mods/FS25_NoAICollisions_ProEdition) | PropaineX |
+| [Parking Brake Pro Edition](https://github.com/DTM-Mods/FS25_ParkingBrake_ProEdition) | PropaineX |
+| [Player Trading+ Pro Edition](https://github.com/DTM-Mods/FS25_PlayerTradingPlus) | PropaineX |
+| [Box Truck Pro Edition](https://github.com/DTM-Mods/FS25_ProEdition_BoxTruck) (work in progress) | PropaineX |
+| [Alpaca PRX500](https://github.com/DTM-Mods/FS25_AlpacaPRX500) | PropaineX |
+| [PX150 XL Windrower Pro Edition](https://github.com/DTM-Mods/FS25_PX150XL) | PropaineX |
+| [Pro X (PRX) Silo Extensions Pro Edition](https://github.com/DTM-Mods/FS25_PRX9000) | PropaineX |
+| [Monthly Expense Sheet Pro Edition](https://github.com/DTM-Mods/FS25_MonthlyExpenseSheet) | PropaineX |
+| [Farm Inventory Pro Edition](https://github.com/DTM-Mods/FS25_FarmInventory) | PropaineX |
 | Server Lag Watch | PropaineX |
 | My Silo Prices Tab | PropaineX |
 | Ropa Tiger 6S Pro Edition | PropaineX |
