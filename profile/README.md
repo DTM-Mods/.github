@@ -14,21 +14,32 @@
 
 | Mod | Author |
 | --- | --- |
-| AutoDrive Overdrive | Fennell |
-| Searchables | Fennell |
+| [AutoDrive Overdrive](https://github.com/DTM-Mods/FS25_AutoDrive) | Fennell |
+| [CourseCorrect](https://github.com/DTM-Mods/FS25_CourseCorrect) | Fennell |
+| [Searchables](https://github.com/DTM-Mods/FS25_Searchables) | Fennell |
+| [Logistics Hub](https://github.com/DTM-Mods/FS25_PalletDepot) | Fennell |
 | Deployables Anywhere | Fennell |
 | Roadside Stand | Fennell |
 | Pig Barn With Feeding Robot | Fennell |
 | Pallet Storage And Logistics | Fennell |
 | F1 Toggle | Fennell |
 | Recoup Money | Fennell |
-| No AI Collisions Pro Edition | PropaineX |
+| [No AI Collisions Pro Edition](https://github.com/PropaineX/FS25_NoAICollisions_ProEdition) | PropaineX |
+| [Parking Brake Pro Edition](https://github.com/PropaineX/FS25_ParkingBrake_ProEdition) | PropaineX |
+| [Player Trading+ Pro Edition](https://github.com/PropaineX/FS25_PlayerTradingPlus) | PropaineX |
+| [Box Truck Pro Edition](https://github.com/PropaineX/FS25_ProEdition_BoxTruck) (work in progress) | PropaineX |
 | Server Lag Watch | PropaineX |
-| Parking Brake Pro Edition | PropaineX |
 | My Silo Prices Tab | PropaineX |
 | Ropa Tiger 6S Pro Edition | PropaineX |
 | Magnon Stone Picker BD Pro Edition | PropaineX |
 | FS22 Buildings | PropaineX |
+
+### Forks we work on
+
+| Mod | Original |
+| --- | --- |
+| [Courseplay](https://github.com/DTM-Mods/FS25_Courseplay) | Courseplay devTeam |
+| [Better Contracts](https://github.com/DTM-Mods/FS25_BetterContracts) | [Mmtrx](https://github.com/Mmtrx/FS25_BetterContracts) |
 
 ### Bugs and requests
 
