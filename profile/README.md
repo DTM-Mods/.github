@@ -17,12 +17,12 @@
 | [AutoDrive Overdrive](https://github.com/DTM-Mods/FS25_AutoDrive) | Fennell |
 | [Searchables](https://github.com/DTM-Mods/FS25_Searchables) | Fennell |
 | [Logistics Hub](https://github.com/DTM-Mods/FS25_PalletDepot) | Fennell |
-| Deployables Anywhere | Fennell |
-| Roadside Stand | Fennell |
-| Pig Barn With Feeding Robot | Fennell |
+| [Deployables Anywhere](https://github.com/DTM-Mods/FS25_DeployablesAnywhere) | Fennell |
+| [Roadside Stand](https://github.com/DTM-Mods/FS25_RoadsideStand) | Fennell |
+| [Pig Barn With Feeding Robot](https://github.com/DTM-Mods/FS25_PigBarnWithRobot) | Fennell |
 | Pallet Storage And Logistics | Fennell |
-| F1 Toggle | Fennell |
-| Recoup Money | Fennell |
+| [F1 Toggle](https://github.com/DTM-Mods/FS25_F1Toggle) | Fennell |
+| [Recoup Money](https://github.com/DTM-Mods/FS25_RecoupMoney) | Fennell |
 | [No AI Collisions Pro Edition](https://github.com/PropaineX/FS25_NoAICollisions_ProEdition) | PropaineX |
 | [Parking Brake Pro Edition](https://github.com/PropaineX/FS25_ParkingBrake_ProEdition) | PropaineX |
 | [Player Trading+ Pro Edition](https://github.com/PropaineX/FS25_PlayerTradingPlus) | PropaineX |
