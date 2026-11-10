@@ -58,18 +58,10 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y -q lua5.1
 
-      # The game runs Lua 5.1: newer syntax (goto, //, bit operators) stops the mod from loading.
+      # The game runs GIANTS' Lua 5.1 (with `continue`): newer syntax (goto, //, bit operators)
+      # stops the mod from loading.
       - name: Lua 5.1 syntax
-        run: |
-          fail=0
-          while IFS= read -r f; do
-            if ! out=$(luac5.1 -p "$f" 2>&1); then
-              echo "::error file=$f::${out#luac5.1: }"
-              fail=1
-            fi
-          done < <(python3 "$CI_PY" files --ext .lua)
-          [ "$fail" = 0 ] && echo "All Lua files parse as Lua 5.1."
-          exit $fail
+        run: python3 "$CI_PY" lua
 
       - name: Check and build ${{ env.MOD_NAME }}.zip
         run: |

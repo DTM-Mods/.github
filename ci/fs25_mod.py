@@ -6,6 +6,7 @@
     python fs25_mod.py files   [--root DIR] [--ext .lua]    lists the files that go into the zip
     python fs25_mod.py version [--root DIR]                 prints <version> from modDesc.xml
     python fs25_mod.py notes   VERSION [--root DIR]         release notes for VERSION (may be empty)
+    python fs25_mod.py lua     [--root DIR] [--luac luac5.1] Lua 5.1 syntax check of the shipped scripts
 
 What goes into the zip
   Files tracked by git (untracked and ignored files never ship), minus:
@@ -24,7 +25,11 @@ Checks (errors fail the build, warnings are only reported)
   - GIANTS ModHub limits: at most 128 files in the zip, every .lua at most 0.5 MB
   - a release tag vX must match <version> in modDesc.xml
 
-Only the Python standard library is used. Lua syntax is checked separately with luac5.1.
+Lua: the game runs GIANTS' Lua 5.1, which also knows the `continue` statement. The 'lua' command
+checks every shipped script with luac5.1 after turning `continue` into an empty `do end` (same line
+numbers), so newer syntax (goto, //, &, |) is caught but GIANTS' own extension isn't flagged.
+
+Only the Python standard library is used.
 """
 import argparse
 import fnmatch
@@ -276,7 +281,8 @@ def check_refs(f, root_el, shipped, lower):
     strict_file = f.lower().endswith(".i3d") or f == "modDesc.xml"
     seen = set()
     for el in root_el.iter():
-        values = [(v, True) for v in el.attrib.values()]
+        # "name" is a label (an i3d names itself "x_work.i3d", nodes are called "a.dds"), never a file to load
+        values = [(v, True) for k, v in el.attrib.items() if k != "name"]
         if el.text and len(el.text) < 260 and not list(el):
             values.append((el.text, False))
         for v, _ in values:
@@ -306,6 +312,36 @@ def check_l10n(md, shipped, lower):
         en = f"{prefix}_en.xml"
         if en not in shipped:
             err(f"modDesc.xml <l10n filenamePrefix=\"{prefix}\"> but {en} isn't in the zip")
+
+
+# ---------------------------------------------------------------- Lua
+CONTINUE_RE = re.compile(r"(?<![\w.:'\"])continue(?![\w])")
+
+
+def check_lua(root, files, luac):
+    import tempfile
+    lua_files = [f for f in files if ext_of(f) == ".lua"]
+    with tempfile.TemporaryDirectory() as tmp:
+        for f in lua_files:
+            src = open(os.path.join(root, f), "rb").read().decode("utf-8", errors="replace")
+            path = os.path.join(tmp, "x.lua")
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                fh.write(CONTINUE_RE.sub("do end", src))   # GIANTS Lua has `continue`, Lua 5.1 doesn't
+            try:
+                r = subprocess.run([luac, "-p", path], capture_output=True, text=True)
+            except FileNotFoundError:
+                err(f"{luac} isn't installed")
+                return
+            if r.returncode != 0:
+                msg = (r.stderr or r.stdout).strip().splitlines()[0] if (r.stderr or r.stdout).strip() else "syntax error"
+                m = re.search(r":(\d+):\s*(.*)$", msg)
+                if m and os.environ.get("GITHUB_ACTIONS"):
+                    errors.append(msg)
+                    print(f"::error file={f},line={m.group(1)}::{f}:{m.group(1)}: {m.group(2)}")
+                else:
+                    err(f"{f}: {m.group(1) + ': ' + m.group(2) if m else msg}")
+    if not errors:
+        print(f"All {len(lua_files)} Lua files parse as GIANTS Lua 5.1.")
 
 
 # ---------------------------------------------------------------- build
@@ -377,7 +413,8 @@ def summary(lines):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["check", "build", "files", "version", "notes"])
+    ap.add_argument("command", choices=["check", "build", "files", "version", "notes", "lua"])
+    ap.add_argument("--luac", default="luac5.1")
     ap.add_argument("version_arg", nargs="?", help="version for 'notes'")
     ap.add_argument("--root", default=".")
     ap.add_argument("--out", default="dist")
@@ -405,6 +442,9 @@ def main():
             if not a.ext or ext_of(f) == a.ext.lower():
                 print(f)
         return 0
+    if a.command == "lua":
+        check_lua(root, files, a.luac)
+        return 1 if errors else 0
 
     print(f"{len(files)} files go into the zip, {len(skipped)} left out")
     check(root, files)
