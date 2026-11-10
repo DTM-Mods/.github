@@ -1,0 +1,6 @@
+{
+    "name": "DTM FS25 mod",
+    "description": "Checks a Farming Simulator 25 mod on every push and publishes a GitHub release with the zip when you push a version tag.",
+    "categories": ["Lua"],
+    "filePatterns": ["^modDesc\\.xml$"]
+}

@@ -1,0 +1,64 @@
+name: Bug report
+description: Something in one of our mods doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! The log is the most useful thing you can give us: please attach it below.
+        Just a quick question? Ask on the [DTM Discord](https://discord.gg/2GTU9hAa3Q) instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: Mod version
+      description: Shown in the game's mod list, or the release you downloaded.
+      placeholder: "1.2.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where do you play?
+      options:
+        - Single player
+        - Multiplayer, hosted from my game
+        - Multiplayer, on a dedicated server
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we make it happen?
+      description: The steps, if you know them.
+      placeholder: |
+        1. Buy ...
+        2. Fill it with ...
+        3. ...
+
+  - type: textarea
+    id: log
+    attributes:
+      label: log.txt
+      description: |
+        Drag your `log.txt` into this box. It's in `Documents/My Games/FarmingSimulator2025`.
+        Start the game, make the bug happen, then quit the game before you copy the file.
+        On a dedicated server, the server's log shows server-side problems: attach that one too if you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: Any other mods that might be involved (same vehicle, same building, similar features)?

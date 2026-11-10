@@ -1,0 +1,23 @@
+name: Feature request
+description: An idea for one of our mods
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe what the mod should do and how you'd use it in the game.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What problem does it solve, or what would it make easier?
+
+  - type: input
+    id: version
+    attributes:
+      label: Mod version you have now
+      placeholder: "1.2.0.0"

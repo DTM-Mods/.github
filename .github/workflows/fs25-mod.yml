@@ -1,0 +1,128 @@
+# Shared build for every DTM Mods FS25 mod repository.
+#
+# A mod repository uses it from .github/workflows/build.yml (Actions tab > New workflow > "DTM FS25 mod"):
+#
+#   jobs:
+#     mod:
+#       uses: DTM-Mods/.github/.github/workflows/fs25-mod.yml@main
+#
+# On every push and pull request:
+#   - Lua 5.1 syntax check of every script that goes into the zip
+#   - modDesc.xml, XML/i3d and file-reference checks, GIANTS ModHub limits (ci/fs25_mod.py)
+#   - builds <repository name>.zip and keeps it as a download on the run page for 14 days
+# On a pushed tag v<version in modDesc.xml> (e.g. v1.2.0.0) it also:
+#   - publishes a GitHub release with the zip and its SHA-256
+#   - posts the release to the DTM Discord (through the repo's discord-release.yml)
+name: FS25 mod
+
+on:
+  workflow_call:
+    inputs:
+      zip-name:
+        description: "Zip name without .zip. Default: the repository name. Never rename an existing mod's zip: savegames see it as a different mod."
+        type: string
+        default: ""
+      max-files:
+        description: "GIANTS ModHub limit on files in the zip; 0 = no limit (for mods that never go to ModHub)"
+        type: number
+        default: 128
+      test-command:
+        description: "Optional extra test command, run from the repository root after the checks"
+        type: string
+        default: ""
+
+jobs:
+  build:
+    name: Check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write     # publish releases on tags
+      actions: write      # start the Discord release post
+    env:
+      MOD_NAME: ${{ inputs.zip-name || github.event.repository.name }}
+      CI_PY: .dtm-ci/ci/fs25_mod.py
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Get the DTM CI scripts
+        uses: actions/checkout@v7
+        with:
+          repository: DTM-Mods/.github
+          ref: main
+          path: .dtm-ci
+          sparse-checkout: ci
+
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q lua5.1
+
+      # The game runs Lua 5.1: newer syntax (goto, //, bit operators) stops the mod from loading.
+      - name: Lua 5.1 syntax
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            if ! out=$(luac5.1 -p "$f" 2>&1); then
+              echo "::error file=$f::${out#luac5.1: }"
+              fail=1
+            fi
+          done < <(python3 "$CI_PY" files --ext .lua)
+          [ "$fail" = 0 ] && echo "All Lua files parse as Lua 5.1."
+          exit $fail
+
+      - name: Check and build ${{ env.MOD_NAME }}.zip
+        run: |
+          tag=()
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then tag=(--tag "$GITHUB_REF_NAME"); fi
+          python3 "$CI_PY" build --out dist --name "$MOD_NAME" --max-files "${{ inputs.max-files }}" "${tag[@]}"
+
+      - name: Extra tests
+        if: inputs.test-command != ''
+        run: ${{ inputs.test-command }}
+
+      - name: Read the version
+        id: mod
+        run: |
+          echo "version=$(python3 "$CI_PY" version)" >> "$GITHUB_OUTPUT"
+          echo "title=$(python3 -c "import xml.etree.ElementTree as E; print((E.parse('modDesc.xml').getroot().findtext('title/en') or '').strip())")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.MOD_NAME }}-${{ steps.mod.outputs.version }}-${{ github.sha }}
+          path: |
+            dist/${{ env.MOD_NAME }}.zip
+            dist/${{ env.MOD_NAME }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.mod.outputs.version }}
+          TITLE: ${{ steps.mod.outputs.title || env.MOD_NAME }}
+        run: |
+          # Notes for this version from PATCH_NOTES.md / RELEASE_NOTES.md / CHANGELOG.md or the
+          # modDesc changelog; without any, GitHub lists the commits since the last release.
+          python3 "$CI_PY" notes "$VERSION" > notes.md
+          generate=()
+          grep -q '[^[:space:]]' notes.md || generate=(--generate-notes)
+          cat >> notes.md <<EOF
+
+          **Install:** put \`$MOD_NAME.zip\` into \`Documents/My Games/FarmingSimulator2025/mods\` without unzipping or renaming it. In multiplayer everyone needs this same version.
+          EOF
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "The release exists already (re-run): replacing its files."
+            gh release upload "$GITHUB_REF_NAME" "dist/$MOD_NAME.zip" "dist/$MOD_NAME.zip.sha256" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "dist/$MOD_NAME.zip" "dist/$MOD_NAME.zip.sha256" \
+              --verify-tag --title "$TITLE $VERSION" --notes-file notes.md "${generate[@]}"
+          fi
+
+      - name: Announce on Discord
+        if: github.ref_type == 'tag' && hashFiles('.github/workflows/discord-release.yml') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run discord-release.yml -f tag="$GITHUB_REF_NAME"
