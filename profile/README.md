@@ -28,7 +28,7 @@
 | [No AI Collisions Pro Edition](https://github.com/DTM-Mods/FS25_NoAICollisions_ProEdition) | PropaineX |
 | [Parking Brake Pro Edition](https://github.com/DTM-Mods/FS25_ParkingBrake_ProEdition) | PropaineX |
 | [Player Trading+ Pro Edition](https://github.com/DTM-Mods/FS25_PlayerTradingPlus) | PropaineX |
-| [Box Truck Pro Edition](https://github.com/DTM-Mods/FS25_ProEdition_BoxTruck) (work in progress) | PropaineX |
+| [Box Truck Pro Edition](https://github.com/DTM-Mods/FS25_ProEdition_BoxTruck) | PropaineX |
 | [Alpaca PRX500](https://github.com/DTM-Mods/FS25_AlpacaPRX500) | PropaineX |
 | [PX150 XL Windrower Pro Edition](https://github.com/DTM-Mods/FS25_PX150XL) | PropaineX |
 | [Pro X (PRX) Silo Extensions Pro Edition](https://github.com/DTM-Mods/FS25_PRX9000) | PropaineX |
