@@ -1,0 +1,120 @@
+# Every Monday, posts the GitHub release downloads of every DTM mod to #staff-chat in the
+# DTM Mods Discord: the total so far and the change since last week.
+# Only counts downloads of release files on GitHub (not ModHub or other sites).
+# Last week's totals are kept in the Actions cache. A manual run is a preview: it posts but does
+# not move the weekly baseline (unless there is no baseline yet).
+# Needs the repository secret DISCORD_STAFF_WEBHOOK (the Discord webhook URL).
+name: Weekly download stats
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write   # keep this scheduled workflow from being switched off after 60 quiet days
+
+concurrency:
+  group: weekly-downloads
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore last week's totals
+        uses: actions/cache/restore@v4
+        with:
+          path: .download-stats
+          key: download-stats-${{ github.run_id }}
+          restore-keys: download-stats-
+
+      - name: Count downloads and post to Discord
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEBHOOK: ${{ secrets.DISCORD_STAFF_WEBHOOK }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, urllib.request
+
+          ORG, EXTRA = "DTM-Mods", ["chrisdfennell/FS25_CourseCorrect"]
+          SKIP = {".github"}
+          STATE = ".download-stats/state.json"
+
+          def api(path):
+              out, page = [], 1
+              while True:
+                  req = urllib.request.Request(f"https://api.github.com/{path}{'&' if '?' in path else '?'}per_page=100&page={page}",
+                      headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                               "Accept": "application/vnd.github+json", "User-Agent": "dtm-download-stats"})
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      items = json.load(r)
+                  out += items
+                  if len(items) < 100:
+                      return out
+                  page += 1
+
+          repos = [r["full_name"] for r in api(f"orgs/{ORG}/repos?type=public")
+                   if not r["archived"] and not r["private"] and r["name"] not in SKIP] + EXTRA
+
+          try:
+              old = json.load(open(STATE))
+          except Exception:
+              old = None
+
+          now, rows = {}, []
+          for full in repos:
+              rels = [r for r in api(f"repos/{full}/releases") if not r["draft"]]
+              total = sum(a["download_count"] for r in rels for a in r["assets"])
+              now[full] = total
+              latest = next((r["tag_name"] for r in rels if not r["prerelease"]), rels[0]["tag_name"] if rels else "no release")
+              week = total - old[full] if old and full in old else None
+              rows.append((week or 0, total, full, latest, week))
+
+          rows.sort(key=lambda x: (-x[0], -x[1], x[2].lower()))
+          lines = []
+          for _, total, full, latest, week in rows:
+              name = full.split("/")[1].removeprefix("FS25_").replace("_", " ")
+              change = "" if week is None else (f" (**+{week}** this week)" if week > 0 else " (no new this week)")
+              lines.append(f"[{name}](https://github.com/{full}/releases) {latest}: {total:,}{change}")
+
+          grand, grand_week = sum(now.values()), (sum(now.values()) - sum(old.get(k, 0) for k in now)) if old else None
+          head = f"**{grand:,}** downloads in total" + (f", **+{grand_week:,}** this week." if grand_week is not None
+                                                        else ". Weekly changes start next week.")
+          payload = {
+              "username": "DTM GitHub",
+              "allowed_mentions": {"parse": []},
+              "embeds": [{
+                  "title": "Weekly downloads",
+                  "description": (head + "\n\n" + "\n".join(lines))[:4000],
+                  "color": 0x5865F2,
+                  "footer": {"text": "GitHub release downloads only (not ModHub or other sites)"},
+              }],
+          }
+          print(json.dumps(payload, indent=2))
+          if not os.environ.get("WEBHOOK"):
+              raise SystemExit("The DISCORD_STAFF_WEBHOOK secret is not set")
+          req = urllib.request.Request(os.environ["WEBHOOK"] + "?wait=true", data=json.dumps(payload).encode(),
+                                       headers={"Content-Type": "application/json", "User-Agent": "dtm-download-stats"})
+          with urllib.request.urlopen(req, timeout=30) as r:
+              print("Posted to Discord, HTTP", r.status)
+
+          if os.environ.get("EVENT") == "schedule" or old is None:
+              os.makedirs(".download-stats", exist_ok=True)
+              json.dump(now, open(STATE, "w"), indent=2)
+              print("Saved this week's totals")
+          EOF
+
+      - name: Save this week's totals
+        if: ${{ hashFiles('.download-stats/state.json') != '' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .download-stats
+          key: download-stats-${{ github.run_id }}
+
+      - name: Keep the schedule alive
+        if: ${{ github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/weekly-downloads.yml/enable"
