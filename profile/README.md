@@ -34,6 +34,7 @@
 | [Pro X (PRX) Silo Extensions Pro Edition](https://github.com/DTM-Mods/FS25_PRX9000) | PropaineX |
 | [Monthly Expense Sheet Pro Edition](https://github.com/DTM-Mods/FS25_MonthlyExpenseSheet) | PropaineX |
 | [Farm Inventory Pro Edition](https://github.com/DTM-Mods/FS25_FarmInventory) | PropaineX |
+| [Brandt LandRoller 591A Standalone](https://github.com/DTM-Mods/FS25_Brandt_Landroller_591_Pro) | PropaineX |
 | Server Lag Watch | PropaineX |
 | My Silo Prices Tab | PropaineX |
 | Ropa Tiger 6S Pro Edition | PropaineX |
