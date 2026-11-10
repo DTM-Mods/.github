@@ -19,7 +19,6 @@
 | [Deployables Anywhere](https://github.com/DTM-Mods/FS25_DeployablesAnywhere) | Fennell |
 | [Roadside Stand](https://github.com/DTM-Mods/FS25_RoadsideStand) | Fennell |
 | [Pig Barn With Feeding Robot](https://github.com/DTM-Mods/FS25_PigBarnWithRobot) | Fennell |
-| Pallet Storage And Logistics | Fennell |
 | [F1 Toggle](https://github.com/DTM-Mods/FS25_F1Toggle) | Fennell |
 | [Recoup Money](https://github.com/DTM-Mods/FS25_RecoupMoney) | Fennell |
 | [No AI Collisions Pro Edition](https://github.com/DTM-Mods/FS25_NoAICollisions_ProEdition) | PropaineX |
@@ -34,7 +33,6 @@
 | Server Lag Watch | PropaineX |
 | My Silo Prices Tab | PropaineX |
 | Ropa Tiger 6S Pro Edition | PropaineX |
-| Magnon Stone Picker BD Pro Edition | PropaineX |
 | FS22 Buildings | PropaineX |
 
 ### Forks we work on
