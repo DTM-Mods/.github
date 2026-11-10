@@ -8,6 +8,10 @@
   Mod overviews • Custom assets • Gameplay enhancements
 </p>
 
+<p align="center">
+  <a href="https://discord.gg/2GTU9hAa3Q"><img src="https://img.shields.io/badge/Discord-Join%20the%20DTM%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join the DTM Discord"></a>
+</p>
+
 ---
 
 ### Our mods
@@ -45,4 +49,4 @@
 
 ### Bugs and requests
 
-Open an issue in the mod's repository. Please attach your `log.txt` and say which mod version you're on.
+Open an issue in the mod's repository, or ask us on [Discord](https://discord.gg/2GTU9hAa3Q). Please attach your `log.txt` and say which mod version you're on.
