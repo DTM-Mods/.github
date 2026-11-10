@@ -11,7 +11,7 @@ What goes into the zip
   Files tracked by git (untracked and ignored files never ship), minus:
   - top-level development folders: .github, source, reference, tools, tests, docs, previews, ...
   - files the game doesn't load: anything that isn't .xml .lua .i3d .shapes .anim .dds .png .ogg
-    .wav .gdm .grle .txt (README.md, notes, LICENSE without .txt, ...)
+    .wav .gls .gdm .grle .txt (README.md, notes, LICENSE without .txt, ...)
   - a .png when a .dds of the same name exists (the game loads the .dds anyway)
   - anything listed in a .modignore file in the repo root (one glob per line, # comments,
     a line starting with ! puts a file back in, e.g. !source/keep.xml)
@@ -38,7 +38,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import PurePosixPath
 
-GAME_EXTS = {".xml", ".lua", ".i3d", ".shapes", ".anim", ".dds", ".png", ".ogg", ".wav",
+GAME_EXTS = {".xml", ".lua", ".i3d", ".shapes", ".anim", ".dds", ".png", ".ogg", ".wav", ".gls",
              ".gdm", ".grle", ".txt"}
 DEV_DIRS = {".github", ".vscode", ".idea", "source", "sources", "reference", "references", "tools",
             "tests", "test", "docs", "doc", "previews", "preview", "screenshots", "chat_history",
@@ -186,9 +186,12 @@ def check(root, files):
         if not (md.findtext("title/en") or "").strip():
             warn("modDesc.xml has no English <title>")
 
-    for f in unused_lua(root, files):
+    unused = unused_lua(root, files)
+    for f in unused[:5]:
         warn(f"{f} isn't mentioned by modDesc.xml or any other file, so it's probably never loaded "
              "(add it to .modignore if it shouldn't ship)")
+    if len(unused) > 5:
+        warn(f"{len(unused) - 5} more Lua files look unused: " + ", ".join(unused[5:]))
 
     if MAX_FILES and len(files) > MAX_FILES:
         err(f"{len(files)} files would go into the zip; GIANTS ModHub allows at most {MAX_FILES} "
