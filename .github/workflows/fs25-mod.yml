@@ -51,7 +51,7 @@ on:
         type: string
         default: ""
       install-note:
-        description: "Markdown under the release notes instead of the standard 'Install: put <zip> into ...' line (e.g. which of two zips to take)."
+        description: "Markdown under the release notes instead of the standard 'Install: put <zip> into ...' line (e.g. which of two zips to take); 'none' leaves it out (notes that explain installing themselves)."
         type: string
         default: ""
       test-tag:
@@ -200,7 +200,9 @@ jobs:
             echo
             cat notes.md
             echo
-            if [ -n "$INSTALL_NOTE" ]; then
+            if [ "$INSTALL_NOTE" = "none" ]; then
+              :
+            elif [ -n "$INSTALL_NOTE" ]; then
               printf '%s\n' "$INSTALL_NOTE"
             else
               echo "**Install:** put \`$MOD_NAME.zip\` into \`Documents/My Games/FarmingSimulator2025/mods\` without unzipping or renaming it. In multiplayer everyone needs this same version."

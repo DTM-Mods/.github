@@ -50,7 +50,7 @@ Every mod repo has the same `build.yml`; only the settings under `with:` differ.
 | `zips` | Logistics Hub | Several zip names in one release (`FS25_LogisticsHub FS25_PalletDepot`) |
 | `version-suffix` | AutoDrive | A build number after the modDesc version in tags: `-od\.[0-9]+` allows `v3.0.1.4-od.57` |
 | `notes-command` | AutoDrive | Its own release-notes script (gets `$VERSION`) |
-| `install-note` | Logistics Hub | Text under the notes instead of the standard install line |
+| `install-note` | Logistics Hub, AutoDrive | Text under the notes instead of the standard install line; `none` leaves it out (AutoDrive's notes explain installing) |
 | `test-tag` | everyone | Set by the Run workflow button (see above) |
 
 ## Other workflows in the mod repos
