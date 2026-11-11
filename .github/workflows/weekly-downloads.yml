@@ -88,7 +88,8 @@ jobs:
               "embeds": [{
                   "title": "Weekly downloads",
                   "description": (head + "\n\n" + "\n".join(lines))[:4000],
-                  "color": 0x5865F2,
+                  "color": 0xD9A441,
+                  "thumbnail": {"url": "https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/dtm-emblem.png"},
                   "footer": {"text": "GitHub release downloads only (not ModHub or other sites)"},
               }],
           }

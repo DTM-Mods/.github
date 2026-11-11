@@ -79,6 +79,17 @@ jobs:
           echo "version=$(python3 "$CI_PY" version)" >> "$GITHUB_OUTPUT"
           echo "title=$(python3 -c "import xml.etree.ElementTree as E; print((E.parse('modDesc.xml').getroot().findtext('title/en') or '').strip())")" >> "$GITHUB_OUTPUT"
 
+      # A release page without notes only lists commits: warn about it on every push, before tagging.
+      - name: Release notes for this version
+        env:
+          VERSION: ${{ steps.mod.outputs.version }}
+        run: |
+          if python3 "$CI_PY" notes "$VERSION" | grep -q '[^[:space:]]'; then
+            echo "Release notes for $VERSION found."
+          else
+            echo "::warning title=No release notes for $VERSION::Add a '## $VERSION' section to PATCH_NOTES.md (or RELEASE_NOTES.md / CHANGELOG.md, or 'Changelog $VERSION:' in the modDesc description) before tagging v$VERSION. Without it the release page only lists commits."
+          fi
+
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.MOD_NAME }}-${{ steps.mod.outputs.version }}-${{ github.sha }}
