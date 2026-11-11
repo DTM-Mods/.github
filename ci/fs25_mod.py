@@ -402,6 +402,10 @@ def release_notes(root, version):
     m = re.search(r"Changelog\s+" + v + r"\s*:?\s*\n(.*?)(?:\n\s*\n|\Z)", desc, re.S | re.I)
     if m:
         return m.group(1).strip()
+    # "1.1.0.1 - what changed" lines (one per change), as in Logistics Hub's changelog
+    lines = re.findall(r"^\s*" + v + r"\s+[-–:]\s+(.+?)\s*$", desc, re.M)
+    if lines:
+        return "\n".join("- " + l for l in lines)
     return ""
 
 
