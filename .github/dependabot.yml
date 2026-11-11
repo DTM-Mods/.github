@@ -1,0 +1,15 @@
+# Dependabot keeps the GitHub Actions used in .github/workflows up to date (actions/checkout and
+# the like). Once a month it opens one pull request with all the updates together: check that its
+# build passes, then merge it. The shared DTM workflow (DTM-Mods/.github/...@main) follows main
+# and isn't touched.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: CI
