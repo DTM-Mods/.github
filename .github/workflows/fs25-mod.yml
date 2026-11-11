@@ -100,6 +100,12 @@ jobs:
           python3 "$CI_PY" notes "$VERSION" > notes.md
           generate=()
           grep -q '[^[:space:]]' notes.md || generate=(--generate-notes)
+          # banner at the top of the release page (the Discord post leaves it out)
+          {
+            echo '<p align="center"><img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/whats-new.jpg" alt="What is new" width="100%"></p>'
+            echo
+            cat notes.md
+          } > notes.tmp && mv notes.tmp notes.md
           cat >> notes.md <<EOF
 
           **Install:** put \`$MOD_NAME.zip\` into \`Documents/My Games/FarmingSimulator2025/mods\` without unzipping or renaming it. In multiplayer everyone needs this same version.
