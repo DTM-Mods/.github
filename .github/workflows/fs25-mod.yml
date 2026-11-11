@@ -9,10 +9,14 @@
 # On every push and pull request:
 #   - Lua 5.1 syntax check of every script that goes into the zip (luac5.1 or the lupa package)
 #   - modDesc.xml, XML/i3d and file-reference checks, GIANTS ModHub limits (ci/fs25_mod.py)
-#   - builds <repository name>.zip and keeps it as a download on the run page for 14 days
+#   - builds the zip and keeps it as a download on the run page for 14 days
 # On a pushed tag v<version in modDesc.xml> (e.g. v1.2.0.0) it also:
 #   - publishes a GitHub release with the zip and its SHA-256
 #   - posts the release to the DTM Discord (through the repo's discord-release.yml)
+#
+# Every setting below is optional; a plain mod needs none. Mods with their own build tool
+# (AutoDrive Overdrive, Logistics Hub) use build-command, zips, version-suffix, notes-command
+# and install-note. See ci/README.md.
 name: FS25 mod
 
 on:
@@ -27,7 +31,31 @@ on:
         type: number
         default: 128
       test-command:
-        description: "Optional extra test command, run from the repository root after the checks"
+        description: "Optional extra test command, run from the repository root after the checks and the build"
+        type: string
+        default: ""
+      build-command:
+        description: "The mod's own build, instead of zipping the repository. It must write dist/<name>.zip for every name in 'zips'. It gets $BUILD_VERSION: the release version on a tag, otherwise the modDesc version (plus -dev.<commit> when version-suffix is set)."
+        type: string
+        default: ""
+      zips:
+        description: "Zip names (without .zip, space separated) that the build makes and the release publishes, e.g. two names for the same mod. Default: zip-name."
+        type: string
+        default: ""
+      version-suffix:
+        description: "Regular expression for a build number after the modDesc version in release tags, e.g. '-od\\.[0-9]+' allows v3.0.1.4-od.57. Default: the tag must be exactly v<modDesc version>."
+        type: string
+        default: ""
+      notes-command:
+        description: "Command that prints the release notes (markdown) for $VERSION. Default: PATCH_NOTES.md / RELEASE_NOTES.md / CHANGELOG.md / README.md or the modDesc changelog."
+        type: string
+        default: ""
+      install-note:
+        description: "Markdown under the release notes instead of the standard 'Install: put <zip> into ...' line (e.g. which of two zips to take)."
+        type: string
+        default: ""
+      test-tag:
+        description: "Try a release without publishing it: the tag is checked, the mod built and the release page written as for this tag (e.g. v1.2.0.0), but nothing is released or posted."
         type: string
         default: ""
 
@@ -41,9 +69,16 @@ jobs:
       actions: write      # start the Discord release post
     env:
       MOD_NAME: ${{ inputs.zip-name || github.event.repository.name }}
+      ZIPS: ${{ inputs.zips || inputs.zip-name || github.event.repository.name }}
       CI_PY: .dtm-ci/ci/fs25_mod.py
+      # the tag this run releases (with test-tag: pretends to release, without publishing)
+      TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.test-tag }}
+      PUBLISH: ${{ github.ref_type == 'tag' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # a release gets the full history and tags (notes can list the commits since the last one)
+          fetch-depth: ${{ (github.ref_type == 'tag' || inputs.test-tag != '') && '0' || '1' }}
 
       - name: Get the DTM CI scripts
         uses: actions/checkout@v7
@@ -68,75 +103,132 @@ jobs:
       - name: Lua 5.1 syntax
         run: python3 "$CI_PY" lua
 
+      - name: Read the version
+        id: mod
+        env:
+          SUFFIX: ${{ inputs.version-suffix }}
+        run: |
+          base=$(python3 "$CI_PY" version)
+          version="$base"
+          if [ -n "$TAG" ]; then
+            want="^v$(printf '%s' "$base" | sed 's/[.]/\\./g')${SUFFIX}\$"
+            if ! [[ "$TAG" =~ $want ]]; then
+              echo "::error::Tag $TAG doesn't match the version in modDesc.xml ($base${SUFFIX:+ plus $SUFFIX}). Raise <version> in modDesc.xml or fix the tag."
+              exit 1
+            fi
+            version="${TAG#v}"
+          fi
+          build_version="$version"
+          if [ -z "$TAG" ] && [ -n "$SUFFIX" ]; then build_version="$base-dev.${GITHUB_SHA::7}"; fi
+          title=$(python3 -c "import xml.etree.ElementTree as E; print((E.parse('modDesc.xml').getroot().findtext('title/en') or '').strip())")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build_version=$build_version" >> "$GITHUB_OUTPUT"
+          echo "title=$title" >> "$GITHUB_OUTPUT"
+          echo "$title $version (build $build_version)"
+
       - name: Check and build ${{ env.MOD_NAME }}.zip
+        if: inputs.build-command == ''
+        env:
+          SUFFIX: ${{ inputs.version-suffix }}
         run: |
           tag=()
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then tag=(--tag "$GITHUB_REF_NAME"); fi
+          if [ -n "$TAG" ] && [ -z "$SUFFIX" ]; then tag=(--tag "$TAG"); fi
           python3 "$CI_PY" build --out dist --name "$MOD_NAME" --max-files "${{ inputs.max-files }}" "${tag[@]}"
+
+      - name: Check the mod
+        if: inputs.build-command != ''
+        run: python3 "$CI_PY" check --max-files "${{ inputs.max-files }}"
+
+      - name: Build ${{ env.ZIPS }}
+        if: inputs.build-command != ''
+        env:
+          BUILD_VERSION: ${{ steps.mod.outputs.build_version }}
+        run: |
+          mkdir -p dist
+          ${{ inputs.build-command }}
+          for z in $ZIPS; do
+            [ -f "dist/$z.zip" ] || { echo "::error::The build didn't write dist/$z.zip"; exit 1; }
+          done
+
+      - name: SHA-256 of the zips
+        run: |
+          : > release-files.txt
+          for z in $ZIPS; do
+            (cd dist && sha256sum "$z.zip" > "$z.zip.sha256" && cat "$z.zip.sha256")
+            printf 'dist/%s.zip\ndist/%s.zip.sha256\n' "$z" "$z" >> release-files.txt
+          done
 
       - name: Extra tests
         if: inputs.test-command != ''
         run: ${{ inputs.test-command }}
 
-      - name: Read the version
-        id: mod
-        run: |
-          echo "version=$(python3 "$CI_PY" version)" >> "$GITHUB_OUTPUT"
-          echo "title=$(python3 -c "import xml.etree.ElementTree as E; print((E.parse('modDesc.xml').getroot().findtext('title/en') or '').strip())")" >> "$GITHUB_OUTPUT"
-
-      # A release page without notes only lists commits: warn about it on every push, before tagging.
-      - name: Release notes for this version
+      - name: Release notes
         env:
           VERSION: ${{ steps.mod.outputs.version }}
+          NOTES_COMMAND: ${{ inputs.notes-command }}
         run: |
-          if python3 "$CI_PY" notes "$VERSION" | grep -q '[^[:space:]]'; then
-            echo "Release notes for $VERSION found."
+          if [ -n "$NOTES_COMMAND" ]; then
+            # the mod's own notes script, run for releases
+            if [ -z "$TAG" ]; then echo "Release notes come from: $NOTES_COMMAND"; : > notes.md; exit 0; fi
+            bash -c "$NOTES_COMMAND" > notes.md
           else
+            python3 "$CI_PY" notes "$VERSION" > notes.md
+          fi
+          if grep -q '[^[:space:]]' notes.md; then
+            echo "Release notes for $VERSION:"; cat notes.md
+          else
+            # A release page without notes only lists commits: warn about it on every push, before tagging.
             echo "::warning title=No release notes for $VERSION::Add a '## $VERSION' section to PATCH_NOTES.md (or RELEASE_NOTES.md / CHANGELOG.md, or 'Changelog $VERSION:' in the modDesc description) before tagging v$VERSION. Without it the release page only lists commits."
           fi
 
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.MOD_NAME }}-${{ steps.mod.outputs.version }}-${{ github.sha }}
-          path: |
-            dist/${{ env.MOD_NAME }}.zip
-            dist/${{ env.MOD_NAME }}.zip.sha256
+          name: ${{ env.MOD_NAME }}-${{ steps.mod.outputs.build_version }}-${{ github.sha }}
+          path: dist/*.zip*
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish the release
-        if: github.ref_type == 'tag'
+      - name: Release page
+        if: env.TAG != ''
         env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.mod.outputs.version }}
-          TITLE: ${{ steps.mod.outputs.title || env.MOD_NAME }}
+          INSTALL_NOTE: ${{ inputs.install-note }}
+          TITLE: ${{ steps.mod.outputs.title || env.MOD_NAME }} ${{ steps.mod.outputs.version }}
         run: |
-          # Notes for this version from PATCH_NOTES.md / RELEASE_NOTES.md / CHANGELOG.md or the
-          # modDesc changelog; without any, GitHub lists the commits since the last release.
-          python3 "$CI_PY" notes "$VERSION" > notes.md
-          generate=()
-          grep -q '[^[:space:]]' notes.md || generate=(--generate-notes)
           # banner at the top of the release page (the Discord post leaves it out)
           {
             echo '<p align="center"><img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/whats-new.jpg" alt="What is new" width="100%"></p>'
             echo
             cat notes.md
-          } > notes.tmp && mv notes.tmp notes.md
-          cat >> notes.md <<EOF
+            echo
+            if [ -n "$INSTALL_NOTE" ]; then
+              printf '%s\n' "$INSTALL_NOTE"
+            else
+              echo "**Install:** put \`$MOD_NAME.zip\` into \`Documents/My Games/FarmingSimulator2025/mods\` without unzipping or renaming it. In multiplayer everyone needs this same version."
+            fi
+          } > release.md
+          echo "Release $TAG \"$TITLE\" with:"; cat release-files.txt
+          echo "----"; cat release.md
+          if [ "$PUBLISH" != "true" ]; then echo "::notice::Test release for $TAG: built and checked, nothing published."; fi
 
-          **Install:** put \`$MOD_NAME.zip\` into \`Documents/My Games/FarmingSimulator2025/mods\` without unzipping or renaming it. In multiplayer everyone needs this same version.
-          EOF
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+      - name: Publish the release
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.mod.outputs.title || env.MOD_NAME }} ${{ steps.mod.outputs.version }}
+        run: |
+          mapfile -t files < release-files.txt
+          generate=()
+          grep -q '[^[:space:]]' notes.md || generate=(--generate-notes)
+          if gh release view "$TAG" >/dev/null 2>&1; then
             echo "The release exists already (re-run): replacing its files."
-            gh release upload "$GITHUB_REF_NAME" "dist/$MOD_NAME.zip" "dist/$MOD_NAME.zip.sha256" --clobber
+            gh release upload "$TAG" "${files[@]}" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "dist/$MOD_NAME.zip" "dist/$MOD_NAME.zip.sha256" \
-              --verify-tag --title "$TITLE $VERSION" --notes-file notes.md "${generate[@]}"
+            gh release create "$TAG" "${files[@]}" --verify-tag --title "$TITLE" --notes-file release.md "${generate[@]}"
           fi
 
       - name: Announce on Discord
-        if: github.ref_type == 'tag' && hashFiles('.github/workflows/discord-release.yml') != ''
+        if: env.PUBLISH == 'true' && hashFiles('.github/workflows/discord-release.yml') != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh workflow run discord-release.yml -f tag="$GITHUB_REF_NAME"
+        run: gh workflow run discord-release.yml -f tag="$TAG"

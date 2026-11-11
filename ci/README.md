@@ -34,4 +34,27 @@ The release notes come from the section for that version in `PATCH_NOTES.md`, `R
 `CHANGELOG.md`, or from a "Changelog 1.2.1.0:" block in the English modDesc description. Without either,
 GitHub lists the commits since the last release.
 
-AutoDrive Overdrive and Logistics Hub keep their own build workflows (custom bundling and two zip names).
+To try a release first: **Actions** > **Build** > **Run workflow**, enter the tag (`v1.2.1.0`). The run checks
+the tag, builds the zip and writes the release page into its log, but publishes nothing.
+
+## Settings
+
+Every mod repo has the same `build.yml`; only the settings under `with:` differ. All are optional.
+
+| Setting | Used by | What it does |
+|---------|---------|--------------|
+| `zip-name` | Box Truck, Brandt | The mod's real zip name when it differs from the repo name. Never change it for a released mod: savegames know the mod by it. |
+| `max-files` | Courseplay, AutoDrive | `0` turns off the GIANTS ModHub 128-file limit |
+| `test-command` | PRX9000, AutoDrive | Extra tests, run after the build |
+| `build-command` | AutoDrive, Logistics Hub | The mod's own build tool instead of zipping the repo (the checks still run first). It must write `dist/<name>.zip`; it gets `$BUILD_VERSION`. |
+| `zips` | Logistics Hub | Several zip names in one release (`FS25_LogisticsHub FS25_PalletDepot`) |
+| `version-suffix` | AutoDrive | A build number after the modDesc version in tags: `-od\.[0-9]+` allows `v3.0.1.4-od.57` |
+| `notes-command` | AutoDrive | Its own release-notes script (gets `$VERSION`) |
+| `install-note` | Logistics Hub | Text under the notes instead of the standard install line |
+| `test-tag` | everyone | Set by the Run workflow button (see above) |
+
+## Other workflows in the mod repos
+
+The same in every repo: `discord-release.yml` (posts releases), `discord-issues.yml` (posts issues).
+The forks (AutoDrive, Better Contracts, Courseplay) also have `upstream-sync.yml`, and Courseplay has
+`upstream-watch.yml`, which watches the upstream projects of all three forks.
