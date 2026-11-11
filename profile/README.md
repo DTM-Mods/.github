@@ -23,6 +23,7 @@
 | <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_PigBarnWithRobot.png" width="40" alt=""> | **[Pig Barn With Feeding Robot](https://github.com/DTM-Mods/FS25_PigBarnWithRobot)** | Fennell | <a href="https://github.com/DTM-Mods/FS25_PigBarnWithRobot/releases/latest"><img src="https://img.shields.io/github/v/release/DTM-Mods/FS25_PigBarnWithRobot?label=latest&color=D9A441&style=flat-square" alt="Latest release"></a> |
 | <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_F1Toggle.png" width="40" alt=""> | **[F1 Toggle](https://github.com/DTM-Mods/FS25_F1Toggle)** | Fennell | <a href="https://github.com/DTM-Mods/FS25_F1Toggle/releases/latest"><img src="https://img.shields.io/github/v/release/DTM-Mods/FS25_F1Toggle?label=latest&color=D9A441&style=flat-square" alt="Latest release"></a> |
 | <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_RecoupMoney.png" width="40" alt=""> | **[Recoup Money](https://github.com/DTM-Mods/FS25_RecoupMoney)** | Fennell | <a href="https://github.com/DTM-Mods/FS25_RecoupMoney/releases/latest"><img src="https://img.shields.io/github/v/release/DTM-Mods/FS25_RecoupMoney?label=latest&color=D9A441&style=flat-square" alt="Latest release"></a> |
+| <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_BananaRegrow.png" width="40" alt=""> | **[Banana Regrow](https://github.com/DTM-Mods/FS25_BananaRegrow)** | Fennell | coming soon |
 
 ### PropaineX
 
