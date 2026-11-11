@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Restore last week's totals
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: .download-stats
           key: download-stats-${{ github.run_id }}
@@ -109,7 +109,7 @@ jobs:
 
       - name: Save this week's totals
         if: ${{ hashFiles('.download-stats/state.json') != '' }}
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .download-stats
           key: download-stats-${{ github.run_id }}
