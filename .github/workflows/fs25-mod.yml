@@ -7,7 +7,7 @@
 #       uses: DTM-Mods/.github/.github/workflows/fs25-mod.yml@main
 #
 # On every push and pull request:
-#   - Lua 5.1 syntax check of every script that goes into the zip
+#   - Lua 5.1 syntax check of every script that goes into the zip (luac5.1 or the lupa package)
 #   - modDesc.xml, XML/i3d and file-reference checks, GIANTS ModHub limits (ci/fs25_mod.py)
 #   - builds <repository name>.zip and keeps it as a download on the run page for 14 days
 # On a pushed tag v<version in modDesc.xml> (e.g. v1.2.0.0) it also:
@@ -53,10 +53,15 @@ jobs:
           path: .dtm-ci
           sparse-checkout: ci
 
-      - name: Install Lua 5.1
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q lua5.1
+      # The Lua check runs on luac5.1 when it is installed, otherwise on the lupa Python package
+      # (Lua 5.1 embedded in Python, the same parser). Ubuntu's package mirrors are often unreachable
+      # from the runners (apt fails with 'Temporary failure resolving'), so CI uses lupa.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Lua 5.1 (lupa)
+        run: python3 -m pip install --quiet lupa
 
       # The game runs GIANTS' Lua 5.1 (with `continue`): newer syntax (goto, //, bit operators)
       # stops the mod from loading.

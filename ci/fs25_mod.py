@@ -28,14 +28,17 @@ Checks (errors fail the build, warnings are only reported)
 Lua: the game runs GIANTS' Lua 5.1, which also knows the `continue` statement. The 'lua' command
 checks every shipped script with luac5.1 after turning `continue` into an empty `do end` (same line
 numbers), so newer syntax (goto, //, &, |) is caught but GIANTS' own extension isn't flagged.
+Without luac5.1 on the PATH it uses the lupa Python package (Lua 5.1 embedded in Python,
+`pip install lupa`), which has the same parser.
 
-Only the Python standard library is used.
+Only the Python standard library is used, except lupa for the Lua check when luac5.1 is missing.
 """
 import argparse
 import fnmatch
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -321,25 +324,42 @@ CONTINUE_RE = re.compile(r"(?<![\w.:'\"])continue(?![\w])")
 def check_lua(root, files, luac):
     import tempfile
     lua_files = [f for f in files if ext_of(f) == ".lua"]
+    compile_with_lupa = None
+    if shutil.which(luac) is None:
+        try:
+            from lupa import lua51
+        except ImportError:
+            err(f"{luac} isn't installed and the lupa Python package isn't either (pip install lupa)")
+            return
+        # loadstring only compiles: the same Lua 5.1 parser as luac -p, nothing runs
+        compile_with_lupa = lua51.LuaRuntime().eval(
+            "function(src, name) local f, e = loadstring(src, name) return e end")
+        print(f"{luac} isn't installed, checking with the lupa package's Lua 5.1 instead.")
+
+    def report(f, msg):
+        m = re.search(r":(\d+):\s*(.*)$", msg)
+        if m and os.environ.get("GITHUB_ACTIONS"):
+            errors.append(msg)
+            print(f"::error file={f},line={m.group(1)}::{f}:{m.group(1)}: {m.group(2)}")
+        else:
+            err(f"{f}: {m.group(1) + ': ' + m.group(2) if m else msg}")
+
     with tempfile.TemporaryDirectory() as tmp:
         for f in lua_files:
             src = open(os.path.join(root, f), "rb").read().decode("utf-8", errors="replace")
+            src = CONTINUE_RE.sub("do end", src)   # GIANTS Lua has `continue`, Lua 5.1 doesn't
+            if compile_with_lupa is not None:
+                e = compile_with_lupa(src, "@" + f)
+                if e:
+                    report(f, str(e).strip().splitlines()[0])
+                continue
             path = os.path.join(tmp, "x.lua")
             with open(path, "w", encoding="utf-8", newline="") as fh:
-                fh.write(CONTINUE_RE.sub("do end", src))   # GIANTS Lua has `continue`, Lua 5.1 doesn't
-            try:
-                r = subprocess.run([luac, "-p", path], capture_output=True, text=True)
-            except FileNotFoundError:
-                err(f"{luac} isn't installed")
-                return
+                fh.write(src)
+            r = subprocess.run([luac, "-p", path], capture_output=True, text=True)
             if r.returncode != 0:
-                msg = (r.stderr or r.stdout).strip().splitlines()[0] if (r.stderr or r.stdout).strip() else "syntax error"
-                m = re.search(r":(\d+):\s*(.*)$", msg)
-                if m and os.environ.get("GITHUB_ACTIONS"):
-                    errors.append(msg)
-                    print(f"::error file={f},line={m.group(1)}::{f}:{m.group(1)}: {m.group(2)}")
-                else:
-                    err(f"{f}: {m.group(1) + ': ' + m.group(2) if m else msg}")
+                out = (r.stderr or r.stdout).strip()
+                report(f, out.splitlines()[0] if out else "syntax error")
     if not errors:
         print(f"All {len(lua_files)} Lua files parse as GIANTS Lua 5.1.")
 
