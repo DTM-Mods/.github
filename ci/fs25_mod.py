@@ -374,10 +374,12 @@ def commit_time(root):
 
 # ---------------------------------------------------------------- release notes
 def release_notes(root, version):
-    """Notes for VERSION from PATCH_NOTES.md / RELEASE_NOTES.md / CHANGELOG.md, else from the
-    English modDesc description ("Changelog X:" block). Empty if nothing is found."""
+    """Notes for VERSION from PATCH_NOTES.md / RELEASE_NOTES.md / CHANGELOG.md / README.md (a heading
+    with the version in it), else from the English modDesc description ("Changelog X:" block).
+    Empty if nothing is found. A section also ends at a '---' rule or an HTML block (README footer,
+    section banners)."""
     v = re.escape(version)
-    for name in ("PATCH_NOTES.md", "RELEASE_NOTES.md", "CHANGELOG.md"):
+    for name in ("PATCH_NOTES.md", "RELEASE_NOTES.md", "CHANGELOG.md", "README.md"):
         path = os.path.join(root, name)
         if not os.path.exists(path):
             continue
@@ -389,7 +391,7 @@ def release_notes(root, version):
                 body = []
                 for nxt in lines[i + 1:]:
                     h = re.match(r"^(#+)\s", nxt)
-                    if h and len(h.group(1)) <= level:
+                    if (h and len(h.group(1)) <= level) or nxt.strip() == "---" or nxt.startswith(("<p ", "<!--", "<details")):
                         break
                     body.append(nxt)
                 text = "\n".join(body).strip()
