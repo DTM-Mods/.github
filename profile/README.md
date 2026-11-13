@@ -72,5 +72,5 @@ Open an issue in the mod's repository, or ask us on [Discord](https://discord.gg
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/dtm-intro.gif" alt="DTM Mods" width="420"><br>
-  <sub>DTM Mods (Dead To Me) by PropaineX & Fennell</sub>
+  <sub>DTM Mods (Designed To Manage) by PropaineX & Fennell</sub>
 </p>
