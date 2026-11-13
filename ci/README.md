@@ -16,7 +16,7 @@ Shared checks and releases for every FS25 mod repository in DTM-Mods.
 
 ## What goes into the zip
 
-Files tracked by git, minus development folders (`source/`, `reference/`, `tools/`, `tests/`, `docs/`,
+Files tracked by git, minus development folders (`source/`, `reference/`, `tools/`, `tests/`, `docs/`, `modhub/`,
 `previews/`, ...), files the game doesn't load (`.md`, `.blend`, `.psd`, ...) and `.png` files that have
 a `.dds` of the same name. A `.modignore` file in the repo root can leave out more
 (`notes/*`, `scripts/Debug.lua`) or put something back (`!docs/needed.xml`).

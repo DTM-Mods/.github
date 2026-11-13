@@ -10,7 +10,7 @@
 
 What goes into the zip
   Files tracked by git (untracked and ignored files never ship), minus:
-  - top-level development folders: .github, source, reference, tools, tests, docs, previews, ...
+  - top-level development folders: .github, source, reference, tools, tests, docs, previews, modhub, ...
   - files the game doesn't load: anything that isn't .xml .lua .i3d .shapes .anim .dds .png .ogg
     .wav .gls .gdm .grle .txt (README.md, notes, LICENSE without .txt, ...)
   - a .png when a .dds of the same name exists (the game loads the .dds anyway)
@@ -50,7 +50,8 @@ GAME_EXTS = {".xml", ".lua", ".i3d", ".shapes", ".anim", ".dds", ".png", ".ogg",
              ".gdm", ".grle", ".txt"}
 DEV_DIRS = {".github", ".vscode", ".idea", "source", "sources", "reference", "references", "tools",
             "tests", "test", "docs", "doc", "previews", "preview", "screenshots", "chat_history",
-            "releases", "release", "build", "dist", "node_modules", "bracket_information", ".dtm-ci"}
+            "releases", "release", "build", "dist", "node_modules", "bracket_information", ".dtm-ci",
+            "modhub"}
 MAX_FILES = 128
 MAX_LUA = 512 * 1024
 # a value that looks like a file inside the mod
