@@ -1,0 +1,4 @@
+# The "Sponsor" button on every DTM-Mods repository (this is the org-wide default; a repo with its
+# own FUNDING.yml uses that one instead).
+ko_fi: dtmmods
+custom: ["https://www.paypal.com/donate/?business=dtmmods%40gmail.com&no_recurring=0&item_name=DTM+Mods&currency_code=USD"]

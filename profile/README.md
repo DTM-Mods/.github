@@ -5,6 +5,8 @@
 <p align="center">
   <a href="https://dtmmods.com"><img src="https://img.shields.io/badge/dtmmods.com-1F4D3A?style=for-the-badge&logo=googlechrome&logoColor=F4F1E8" alt="dtmmods.com"></a>
   <a href="https://discord.gg/2GTU9hAa3Q"><img src="https://img.shields.io/badge/Discord-join%20us-D9A441?style=for-the-badge&logo=discord&logoColor=143326&labelColor=E9C77A" alt="Join the DTM Discord"></a>
+  <a href="https://ko-fi.com/dtmmods"><img src="https://img.shields.io/badge/Ko--fi-support%20us-1F4D3A?style=for-the-badge&logo=kofi&logoColor=F4F1E8" alt="Support DTM Mods on Ko-fi"></a>
+  <a href="https://www.paypal.com/donate/?business=dtmmods%40gmail.com&amp;no_recurring=0&amp;item_name=DTM+Mods&amp;currency_code=USD"><img src="https://img.shields.io/badge/PayPal-donate-1F4D3A?style=for-the-badge&logo=paypal&logoColor=F4F1E8" alt="Donate to DTM Mods with PayPal"></a>
 </p>
 
 <p align="center">
@@ -72,6 +74,12 @@ Download the zip from the mod's **Latest** release and put it, without unzipping
 ### Bugs and requests
 
 Open an issue in the mod's repository, or ask us on [Discord](https://discord.gg/2GTU9hAa3Q). Please attach your `log.txt` and say which mod version you're on.
+
+### Support DTM Mods
+
+Our mods are free. If they make your farm run better and you'd like to say thanks,
+you can buy us a coffee on [Ko-fi](https://ko-fi.com/dtmmods) or donate with [PayPal](https://www.paypal.com/donate/?business=dtmmods%40gmail.com&no_recurring=0&item_name=DTM+Mods&currency_code=USD).
+It helps pay for the server and keeps the mods coming.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/dtm-intro.gif" alt="DTM Mods" width="420"><br>
