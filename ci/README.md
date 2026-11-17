@@ -28,7 +28,7 @@ Same commit, same zip: the timestamps inside are fixed, so a rebuild has the sam
 Besides the basic checks, every build checks the GIANTS ModHub rules that GIANTS' TestRunner fails a mod for
 and that can be checked without the game. These are errors:
 
-- `descVersion` in modDesc.xml must be **115**
+- `descVersion` in modDesc.xml must be **116** (the current game version; TestRunner 0.9.24 accepts only 116)
 - the mod icon must be a `.dds`, **DXT1** (BC1), without mipmaps
 - every `.dds` must be compressed (DXT1, DXT5, BC4, BC5 or a DX10 header), not uncompressed RGBA
 - only game files in the zip: no `.png`, `.txt`, ... (`.xml .lua .dds .i3d .shapes .anim .ogg .wav .gls .ogv .gdm .grle .cache`)

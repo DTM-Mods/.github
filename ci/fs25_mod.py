@@ -23,7 +23,7 @@ Checks (errors fail the build, warnings are only reported)
   - files referenced from the shipped XML/i3d files exist in the zip (case must match too:
     the game is case sensitive on the server)
   - GIANTS ModHub limits: at most 128 files in the zip, every .lua at most 0.5 MB
-  - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 115, version 1.0.0.0 or higher, an
+  - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 116, version 1.0.0.0 or higher, an
     English and a German description, the icon a 512x512 DXT1 .dds without mipmaps, every .dds
     compressed, only game files in the zip (no .png/.txt), no pcall/xpcall in Lua;
     warnings for a missing changelog, titles translated to the English text and Lua lines over 200 characters
@@ -329,7 +329,9 @@ def check_l10n(md, shipped, lower):
 # ---------------------------------------------------------------- GIANTS ModHub (TestRunner) rules
 # What GIANTS' TestRunner (the check ModHub runs on every upload) fails a mod for, as far as it can be
 # checked without the game: found by running TestRunner 0.9.23 on our mods in November 2026.
-MODHUB_DESC_VERSION = 115
+# descVersion: the game build of 2026-10-27 has ModDesc version 116 (its log says so) and TestRunner 0.9.24
+# accepts only 116 (0.9.23 only 115).
+MODHUB_DESC_VERSION = 116
 # files ModHub accepts in a zip (TestRunner "ObsoleteFiles": source files like .png must be exported to .dds)
 MODHUB_EXTS = {".xml", ".lua", ".dds", ".i3d", ".shapes", ".anim", ".ogg", ".wav", ".gls", ".ogv",
                ".gdm", ".grle", ".cache"}
