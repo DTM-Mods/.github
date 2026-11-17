@@ -23,8 +23,9 @@ Checks (errors fail the build, warnings are only reported)
   - files referenced from the shipped XML/i3d files exist in the zip (case must match too:
     the game is case sensitive on the server)
   - GIANTS ModHub limits: at most 128 files in the zip, every .lua at most 0.5 MB
-  - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 115, the icon a DXT1 .dds without
-    mipmaps, every .dds compressed, only game files in the zip (no .png/.txt), no pcall/xpcall in Lua;
+  - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 115, version 1.0.0.0 or higher, an
+    English and a German description, the icon a 512x512 DXT1 .dds without mipmaps, every .dds
+    compressed, only game files in the zip (no .png/.txt), no pcall/xpcall in Lua;
     warnings for a missing changelog, titles translated to the English text and Lua lines over 200 characters
   - a release tag vX must match <version> in modDesc.xml
 
@@ -394,7 +395,17 @@ def check_modhub(root, files, md):
         if dv is not None and dv.strip() != str(MODHUB_DESC_VERSION):
             err(f"modDesc.xml descVersion is {dv}; GIANTS ModHub (TestRunner) only accepts {MODHUB_DESC_VERSION}")
         version = moddesc_version(md)
+        if version and not re.match(r"[1-9]\d*\.\d+\.\d+\.\d+", version):
+            err(f"version {version}: ModHub wants a.b.c.d with a at least 1 (1.0.0.0 and up)")
         desc = md.find("description")
+        if desc is not None and re.fullmatch(r"1\.0\.0\.0", version or ""):
+            with_log = [d.tag for d in desc if "changelog" in (d.text or "").lower()]
+            if with_log:
+                err(f"modDesc.xml description/{', '.join(with_log)} has a changelog, but the version is 1.0.0.0: "
+                    "ModHub (TestRunner) refuses a changelog in the first version (keep it in PATCH_NOTES.md)")
+        for lang in ("en", "de"):
+            if desc is None or not (desc.findtext(lang) or "").strip():
+                err(f"modDesc.xml has no <description><{lang}>; ModHub requires an English and a German description")
         if desc is not None and version and not re.fullmatch(r"1(\.0)*", version):
             for lang in desc:
                 if "changelog" not in (lang.text or "").lower():
@@ -421,6 +432,37 @@ def check_modhub(root, files, md):
                         "ModHub wants DXT1 (BC1)")
                 if mips > 1:
                     err(f"the mod icon {dds} has {mips} mipmaps; ModHub wants none")
+                with open(os.path.join(root, dds), "rb") as fh:
+                    head = fh.read(20)
+                h, w = int.from_bytes(head[12:16], "little"), int.from_bytes(head[16:20], "little")
+                if (w, h) != (512, 512):
+                    err(f"the mod icon {dds} is {w}x{h}; ModHub wants 512x512")
+
+    # shop images (storeData/image): not the mod icon file, at most 3 mipmaps (TestRunner StoreItemCollector)
+    icon_file = None
+    if md is not None and (md.findtext("iconFilename") or "").strip():
+        i = md.findtext("iconFilename").strip()
+        icon_file = (i[:-4] + ".dds" if i.lower().endswith(".png") else i).lower()
+    for f in files:
+        if ext_of(f) != ".xml":
+            continue
+        try:
+            tree = ET.parse(os.path.join(root, f)).getroot()
+        except ET.ParseError:
+            continue
+        for img in tree.iter("image"):
+            ref = (img.text or "").strip().replace("\\", "/")
+            if not ref or is_external(ref) or not REF_RE.match(ref):
+                continue
+            ref = re.sub(r"(?i)^\$moddir\$/?", "", ref)
+            dds = ref[:-4] + ".dds" if ref.lower().endswith(".png") else ref
+            if icon_file and dds.lower() == icon_file:
+                err(f"{f}: the shop image {ref} is the mod icon too; ModHub wants a separate store_*.dds")
+            info = dds_info(os.path.join(root, dds)) if dds in files else None
+            if info is not None and info[1] > 3:
+                # TestRunner's StoreItemCollector refused 8-10 mipmaps on some shop images and passed 4-8 on
+                # others (Nov 2026): a warning; TestRunner on the server decides
+                warn(f"the shop image {dds} has {info[1]} mipmaps; ModHub's TestRunner may want at most 3")
 
     for f in files:
         e = ext_of(f)
