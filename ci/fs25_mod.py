@@ -23,6 +23,9 @@ Checks (errors fail the build, warnings are only reported)
   - files referenced from the shipped XML/i3d files exist in the zip (case must match too:
     the game is case sensitive on the server)
   - GIANTS ModHub limits: at most 128 files in the zip, every .lua at most 0.5 MB
+  - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 115, the icon a DXT1 .dds without
+    mipmaps, every .dds compressed, only game files in the zip (no .png/.txt), no pcall/xpcall in Lua;
+    warnings for a missing changelog, titles translated to the English text and Lua lines over 200 characters
   - a release tag vX must match <version> in modDesc.xml
 
 Lua: the game runs GIANTS' Lua 5.1, which also knows the `continue` statement. The 'lua' command
@@ -50,10 +53,11 @@ GAME_EXTS = {".xml", ".lua", ".i3d", ".shapes", ".anim", ".dds", ".png", ".ogg",
              ".gdm", ".grle", ".txt"}
 DEV_DIRS = {".github", ".vscode", ".idea", "source", "sources", "reference", "references", "tools",
             "tests", "test", "docs", "doc", "previews", "preview", "screenshots", "chat_history",
-            "releases", "release", "build", "dist", "node_modules", "bracket_information", ".dtm-ci",
+            "releases", "release", "build", "dist", "dev", "node_modules", "bracket_information", ".dtm-ci",
             "modhub"}
 MAX_FILES = 128
 MAX_LUA = 512 * 1024
+MODHUB = True         # the GIANTS ModHub (TestRunner) rules; --no-modhub for mods that never go to ModHub
 # a value that looks like a file inside the mod
 REF_RE = re.compile(r"^[^<>|*?\"\s][^<>|*?\"]*\.(xml|lua|i3d|shapes|anim|dds|png|ogg|wav|gdm|grle|txt)$", re.I)
 
@@ -226,6 +230,9 @@ def check(root, files):
             if f == "modDesc.xml":
                 check_l10n(tree.getroot(), shipped, lower)
 
+    if MODHUB:
+        check_modhub(root, files, md)
+
 
 def resolve(ref, base_dir, shipped, lower):
     """Returns (found_path, wrong_case_path)."""
@@ -316,6 +323,133 @@ def check_l10n(md, shipped, lower):
         en = f"{prefix}_en.xml"
         if en not in shipped:
             err(f"modDesc.xml <l10n filenamePrefix=\"{prefix}\"> but {en} isn't in the zip")
+
+
+# ---------------------------------------------------------------- GIANTS ModHub (TestRunner) rules
+# What GIANTS' TestRunner (the check ModHub runs on every upload) fails a mod for, as far as it can be
+# checked without the game: found by running TestRunner 0.9.23 on our mods in November 2026.
+MODHUB_DESC_VERSION = 115
+# files ModHub accepts in a zip (TestRunner "ObsoleteFiles": source files like .png must be exported to .dds)
+MODHUB_EXTS = {".xml", ".lua", ".dds", ".i3d", ".shapes", ".anim", ".ogg", ".wav", ".gls", ".ogv",
+               ".gdm", ".grle", ".cache"}
+# DDS compressions TestRunner accepts (DX10 covers the BCn formats in a DX10 header)
+DDS_OK = {b"DXT1", b"DXT5", b"ATI1", b"ATI2", b"BC4U", b"BC5U", b"BC5S", b"DX10"}
+
+
+def dds_info(path):
+    """(fourcc, mipmaps) of a .dds, or None if it isn't one. fourcc is b'' for uncompressed."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(128)
+    except OSError:
+        return None
+    if len(head) < 128 or head[:4] != b"DDS ":
+        return None
+    mips = int.from_bytes(head[28:32], "little")
+    pf_flags = int.from_bytes(head[80:84], "little")
+    fourcc = head[84:88] if pf_flags & 0x4 else b""
+    return fourcc, mips
+
+
+def lua_code_only(src):
+    """The Lua source with comments and string contents blanked out (line numbers kept)."""
+    out, i, n = [], 0, len(src)
+    while i < n:
+        c = src[i]
+        if src.startswith("--", i):
+            m = re.match(r"--\[(=*)\[", src[i:])
+            if m:
+                end = src.find("]" + m.group(1) + "]", i)
+                end = n if end < 0 else end + len(m.group(1)) + 2
+            else:
+                end = src.find("\n", i)
+                end = n if end < 0 else end
+            out.append(re.sub(r"[^\n]", " ", src[i:end]))
+            i = end
+        elif c in "\"'":
+            j = i + 1
+            while j < n and src[j] != c and src[j] != "\n":
+                j += 2 if src[j] == "\\" else 1
+            out.append(c + " " * (min(j, n) - i - 1) + (c if j < n else ""))
+            i = j + 1
+        elif c == "[" and re.match(r"\[(=*)\[", src[i:]):
+            m = re.match(r"\[(=*)\[", src[i:])
+            end = src.find("]" + m.group(1) + "]", i)
+            end = n if end < 0 else end + len(m.group(1)) + 2
+            out.append(re.sub(r"[^\n]", " ", src[i:end]))
+            i = end
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+PCALL_RE = re.compile(r"(?<![\w.:])(x?pcall)\b")
+
+
+def check_modhub(root, files, md):
+    """GIANTS ModHub / TestRunner rules. Errors: TestRunner fails the mod for these."""
+    if md is not None:
+        dv = md.get("descVersion")
+        if dv is not None and dv.strip() != str(MODHUB_DESC_VERSION):
+            err(f"modDesc.xml descVersion is {dv}; GIANTS ModHub (TestRunner) only accepts {MODHUB_DESC_VERSION}")
+        version = moddesc_version(md)
+        desc = md.find("description")
+        if desc is not None and version and not re.fullmatch(r"1(\.0)*", version):
+            for lang in desc:
+                if "changelog" not in (lang.text or "").lower():
+                    warn(f"modDesc.xml description/{lang.tag} has no changelog; ModHub's TestRunner may ask for "
+                         f"one for an update (add 'Changelog {version}:' with the changes)")
+        title = md.find("title")
+        if title is not None:
+            en = (title.findtext("en") or "").strip()
+            same = [t.tag for t in title if t.tag != "en" and (t.text or "").strip() == en]
+            if en and same:
+                warn(f"modDesc.xml <title> repeats the English title for {', '.join(same)}; "
+                     "ModHub calls that obsolete (only translate a title that changes)")
+        icon = (md.findtext("iconFilename") or "").strip()
+        if icon:
+            dds = icon[:-4] + ".dds" if icon.lower().endswith(".png") else icon
+            if icon.lower().endswith(".png"):
+                err(f"modDesc.xml <iconFilename> is {icon}; ModHub wants the icon as a .dds "
+                    f"(DXT1, no mipmaps): {dds}")
+            info = dds_info(os.path.join(root, dds)) if dds in files else None
+            if info is not None:
+                fourcc, mips = info
+                if fourcc != b"DXT1":
+                    err(f"the mod icon {dds} is {fourcc.decode('ascii', 'replace') or 'uncompressed'}; "
+                        "ModHub wants DXT1 (BC1)")
+                if mips > 1:
+                    err(f"the mod icon {dds} has {mips} mipmaps; ModHub wants none")
+
+    for f in files:
+        e = ext_of(f)
+        if e not in MODHUB_EXTS:
+            err(f"{f}: ModHub doesn't accept {e} files in a mod "
+                + ("(export it as .dds)" if e in (".png", ".tga", ".jpg") else "(leave it out of the zip)"))
+        elif e == ".dds":
+            info = dds_info(os.path.join(root, f))
+            if info is None:
+                err(f"{f} isn't a valid .dds file")
+            elif info[0] not in DDS_OK:
+                err(f"{f} is {info[0].decode('ascii', 'replace') or 'uncompressed'}; ModHub only takes "
+                    "compressed textures (DXT1, DXT5, BC4, BC5 or a DX10 header)")
+        elif e == ".lua":
+            src = open(os.path.join(root, f), "rb").read().decode("utf-8", errors="replace")
+            code = lua_code_only(src)
+            for m in PCALL_RE.finditer(code):
+                line = code.count("\n", 0, m.start()) + 1
+                msg = (f"{f}:{line}: {m.group(1)} isn't allowed on ModHub (it hides errors from the log); "
+                       "check for nil instead")
+                if os.environ.get("GITHUB_ACTIONS"):
+                    errors.append(msg)
+                    print(f"::error file={f},line={line}::{msg}")
+                else:
+                    err(msg)
+            long_lines = [i + 1 for i, l in enumerate(src.splitlines()) if len(l) > 200]
+            if long_lines:
+                warn(f"{f}: {len(long_lines)} line(s) longer than 200 characters (TestRunner warns), "
+                     f"first at line {long_lines[0]}")
 
 
 # ---------------------------------------------------------------- Lua
@@ -449,10 +583,13 @@ def main():
     ap.add_argument("--tag", help="release tag; must be v<version from modDesc.xml>")
     ap.add_argument("--ext", help="with 'files': only this extension, e.g. .lua")
     ap.add_argument("--max-files", type=int, default=128, help="GIANTS ModHub file limit, 0 = no limit")
+    ap.add_argument("--no-modhub", action="store_true",
+                    help="skip the GIANTS ModHub (TestRunner) rules: for mods that never go to ModHub")
     a = ap.parse_args()
     root = os.path.abspath(a.root)
-    global MAX_FILES
+    global MAX_FILES, MODHUB
     MAX_FILES = a.max_files
+    MODHUB = not a.no_modhub
 
     if a.command == "version":
         print(moddesc_version(read_moddesc(root)))

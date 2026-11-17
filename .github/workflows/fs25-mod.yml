@@ -8,11 +8,17 @@
 #
 # On every push and pull request:
 #   - Lua 5.1 syntax check of every script that goes into the zip (luac5.1 or the lupa package)
-#   - modDesc.xml, XML/i3d and file-reference checks, GIANTS ModHub limits (ci/fs25_mod.py)
+#   - modDesc.xml, XML/i3d and file-reference checks, GIANTS ModHub limits and the GIANTS ModHub
+#     (TestRunner) rules that can be checked without the game (ci/fs25_mod.py)
 #   - builds the zip and keeps it as a download on the run page for 14 days
-# On a pushed tag v<version in modDesc.xml> (e.g. v1.2.0.0) it also:
-#   - publishes a GitHub release with the zip and its SHA-256
-#   - posts the release to the DTM Discord (through the repo's discord-release.yml)
+# Releases (automatic): when a push to the default branch raises <version> in modDesc.xml to a
+# version that has no tag yet, or when a tag v<version> is pushed by hand, it also:
+#   - tags the commit v<version> and publishes a PRE-RELEASE (a test build) with the zip and its SHA-256
+#   - posts it to the DTM Discord #testing (through the repo's discord-release.yml)
+#   The DTM server puts every new test build into /testing and runs GIANTS' TestRunner on it.
+# Going live: edit the release on GitHub and untick "Set as a pre-release".
+#   Discord #mod-releases gets the post, the website shows the new version, and the DTM server
+#   swaps the zip into /FTPness if TestRunner passed (dtm-server deploy-mods.ps1).
 #
 # Every setting below is optional; a plain mod needs none. Mods with their own build tool
 # (AutoDrive Overdrive, Logistics Hub) use build-command, zips, version-suffix, notes-command
@@ -54,6 +60,18 @@ on:
         description: "Markdown under the release notes instead of the standard 'Install: put <zip> into ...' line (e.g. which of two zips to take); 'none' leaves it out (notes that explain installing themselves)."
         type: string
         default: ""
+      modhub:
+        description: "Check the GIANTS ModHub (TestRunner) rules: descVersion, DDS formats, icon, no .png/.txt in the zip, no pcall. false for mods that never go to ModHub (forks like AutoDrive)."
+        type: boolean
+        default: true
+      auto-release:
+        description: "Release a new modDesc <version> by itself when it reaches the default branch (as a pre-release). Not with version-suffix (those tags need a build number)."
+        type: boolean
+        default: true
+      prerelease:
+        description: "New releases start as pre-releases (test builds); untick 'pre-release' on GitHub to put one live. false = straight to a full release."
+        type: boolean
+        default: true
       test-tag:
         description: "Try a release without publishing it: the tag is checked, the mod built and the release page written as for this tag (e.g. v1.2.0.0), but nothing is released or posted."
         type: string
@@ -71,14 +89,16 @@ jobs:
       MOD_NAME: ${{ inputs.zip-name || github.event.repository.name }}
       ZIPS: ${{ inputs.zips || inputs.zip-name || github.event.repository.name }}
       CI_PY: .dtm-ci/ci/fs25_mod.py
-      # the tag this run releases (with test-tag: pretends to release, without publishing)
-      TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.test-tag }}
-      PUBLISH: ${{ github.ref_type == 'tag' }}
+      # the tag pushed by hand, or test-tag (pretends to release, without publishing). The step "Read the
+      # version" sets TAG and PUBLISH for the later steps (also for an automatic release of a new version).
+      TAG_REF: ${{ github.ref_type == 'tag' && github.ref_name || inputs.test-tag }}
+      PUBLISH_REF: ${{ github.ref_type == 'tag' }}
+      NO_MODHUB: ${{ !inputs.modhub && '--no-modhub' || '' }}
     steps:
       - uses: actions/checkout@v7
         with:
           # a release gets the full history and tags (notes can list the commits since the last one)
-          fetch-depth: ${{ (github.ref_type == 'tag' || inputs.test-tag != '') && '0' || '1' }}
+          fetch-depth: ${{ (github.ref_type == 'tag' || inputs.test-tag != '' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && '0' || '1' }}
 
       - name: Get the DTM CI scripts
         uses: actions/checkout@v7
@@ -107,9 +127,21 @@ jobs:
         id: mod
         env:
           SUFFIX: ${{ inputs.version-suffix }}
+          AUTO_RELEASE: ${{ inputs.auto-release && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
         run: |
           base=$(python3 "$CI_PY" version)
           version="$base"
+          TAG="$TAG_REF"; PUBLISH="$PUBLISH_REF"; AUTO=false
+          # a new version on the default branch releases itself (not for build-number tags: version-suffix)
+          if [ -z "$TAG" ] && [ "$AUTO_RELEASE" = "true" ] && [ -z "$SUFFIX" ] && [ -n "$base" ]; then
+            if git ls-remote --exit-code --tags origin "refs/tags/v$base" >/dev/null 2>&1; then
+              echo "v$base is released already; raise <version> in modDesc.xml for a new release."
+            else
+              echo "::notice title=New version $base::modDesc.xml has a new version: releasing it as v$base."
+              TAG="v$base"; PUBLISH=true; AUTO=true
+            fi
+          fi
+          { echo "TAG=$TAG"; echo "PUBLISH=$PUBLISH"; echo "AUTO_TAG=$AUTO"; } >> "$GITHUB_ENV"
           if [ -n "$TAG" ]; then
             want="^v$(printf '%s' "$base" | sed 's/[.]/\\./g')${SUFFIX}\$"
             if ! [[ "$TAG" =~ $want ]]; then
@@ -133,11 +165,11 @@ jobs:
         run: |
           tag=()
           if [ -n "$TAG" ] && [ -z "$SUFFIX" ]; then tag=(--tag "$TAG"); fi
-          python3 "$CI_PY" build --out dist --name "$MOD_NAME" --max-files "${{ inputs.max-files }}" "${tag[@]}"
+          python3 "$CI_PY" build --out dist --name "$MOD_NAME" --max-files "${{ inputs.max-files }}" $NO_MODHUB "${tag[@]}"
 
       - name: Check the mod
         if: inputs.build-command != ''
-        run: python3 "$CI_PY" check --max-files "${{ inputs.max-files }}"
+        run: python3 "$CI_PY" check --max-files "${{ inputs.max-files }}" $NO_MODHUB
 
       - name: Build ${{ env.ZIPS }}
         if: inputs.build-command != ''
@@ -216,20 +248,34 @@ jobs:
         if: env.PUBLISH == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ inputs.prerelease }}
           TITLE: ${{ steps.mod.outputs.title || env.MOD_NAME }} ${{ steps.mod.outputs.version }}
         run: |
           mapfile -t files < release-files.txt
           generate=()
           grep -q '[^[:space:]]' notes.md || generate=(--generate-notes)
+          pre=()
+          if [ "$PRERELEASE" = "true" ]; then pre=(--prerelease); fi
           if gh release view "$TAG" >/dev/null 2>&1; then
+            if [ "$AUTO_TAG" = "true" ]; then
+              echo "::notice::$TAG was released in the meantime (another push); leaving it as it is."
+              echo "SKIP_POST=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
             echo "The release exists already (re-run): replacing its files."
             gh release upload "$TAG" "${files[@]}" --clobber
+          elif [ "$AUTO_TAG" = "true" ]; then
+            # tags this commit
+            gh release create "$TAG" "${files[@]}" --target "$GITHUB_SHA" --title "$TITLE" --notes-file release.md "${generate[@]}" "${pre[@]}"
           else
-            gh release create "$TAG" "${files[@]}" --verify-tag --title "$TITLE" --notes-file release.md "${generate[@]}"
+            gh release create "$TAG" "${files[@]}" --verify-tag --title "$TITLE" --notes-file release.md "${generate[@]}" "${pre[@]}"
+          fi
+          if [ "$PRERELEASE" = "true" ]; then
+            echo "::notice title=Test build $TAG::Published as a pre-release. To put it live: open the release on GitHub, Edit, untick 'Set as a pre-release', Update release."
           fi
 
       - name: Announce on Discord
-        if: env.PUBLISH == 'true' && hashFiles('.github/workflows/discord-release.yml') != ''
+        if: env.PUBLISH == 'true' && env.SKIP_POST != 'true' && hashFiles('.github/workflows/discord-release.yml') != ''
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
