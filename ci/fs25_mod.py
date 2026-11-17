@@ -23,6 +23,9 @@ Checks (errors fail the build, warnings are only reported)
   - files referenced from the shipped XML/i3d files exist in the zip (case must match too:
     the game is case sensitive on the server)
   - GIANTS ModHub limits: at most 128 files in the zip, every .lua at most 0.5 MB
+  - GIANTS' FS25 ModHub guidelines, unless --no-modhub: shop images and brand icons without mipmaps,
+    no fantasy brands, GIANTS' description templates, a description in every language the mod
+    speaks, the zip name, modhub/screenshots/ (3+, 1600x900)
   - GIANTS ModHub (TestRunner) rules, unless --no-modhub: descVersion 116, version 1.0.0.0 or higher, an
     English and a German description, the icon a 512x512 DXT1 .dds without mipmaps, every .dds
     compressed, only game files in the zip (no .png/.txt), no pcall/xpcall in Lua;
@@ -354,6 +357,133 @@ def dds_info(path):
     return fourcc, mips
 
 
+def dds_size(path):
+    """(width, height) of a .dds."""
+    with open(path, "rb") as fh:
+        head = fh.read(20)
+    return int.from_bytes(head[16:20], "little"), int.from_bytes(head[12:16], "little")
+
+
+def check_dds_image(root, dds, what, size, formats, format_name):
+    """A ModHub picture (shop image, brand icon): size, compression, no mipmaps."""
+    info = dds_info(os.path.join(root, dds))
+    if info is None:
+        return
+    fourcc, mips = info
+    if fourcc not in formats:
+        err(f"the {what} {dds} is {fourcc.decode('ascii', 'replace') or 'uncompressed'}; ModHub wants {format_name}")
+    if mips > 1:
+        err(f"the {what} {dds} has {mips} mipmaps; GIANTS' ModHub guidelines want none")
+    w, h = dds_size(os.path.join(root, dds))
+    if (w, h) != size:
+        err(f"the {what} {dds} is {w}x{h}; ModHub wants {size[0]}x{size[1]}")
+
+
+# ---------------------------------------------------------------- GIANTS' FS25 ModHub guidelines
+# "ModHub Guidelines - Farming Simulator 25" (forum.giants-software.com/viewtopic.php?p=1628568, updated
+# 19.03.26), the data check before any in-game test. What can be checked from the files is checked here.
+ZIP_NAME = None       # the zip's name without .zip (--name, MOD_NAME in CI)
+# description template labels (section 5): (English labels, German labels); a label is a regex
+TEMPLATE = {
+    "vehicle": ([r"Category:", r"Price:"], [r"Shopkategorie:|Kategorie:", r"Preis:"]),
+    "placeable": ([r"Category:", r"Price:", r"Monthly upkeep:"],
+                  [r"Kategorie:|Shopkategorie:|Category:", r"Preis:", r"Monatliche Unterhaltskosten:"]),
+    "script": ([r"Hotkeys:"], [r"Tastenkombinationen:"]),
+}
+SCREENSHOT_SIZE = (1600, 900)
+
+
+def mod_languages(root, md, files):
+    """Languages the mod's own texts (l10n) come in."""
+    langs = set()
+    l10n = md.find("l10n")
+    if l10n is None:
+        return langs
+    prefix = (l10n.get("filenamePrefix") or "").replace("\\", "/")
+    if prefix:
+        for f in files:
+            m = re.fullmatch(re.escape(prefix) + r"_(\w\w)\.xml", f)
+            if m:
+                langs.add(m.group(1))
+    for text in l10n.iter("text"):
+        langs.update(c.tag for c in text)
+    return langs
+
+
+def check_guidelines(root, files, md):
+    name = ZIP_NAME
+    if name:
+        if not re.fullmatch(r"FS25_[A-Za-z0-9_]+", name):
+            err(f"zip name {name}.zip: ModHub wants FS25_ at the start and only English letters, digits and _")
+        elif re.search(r"(?i)_v?\d+_\d+|_v\d", name):
+            err(f"zip name {name}.zip looks like it has a version number in it; ModHub refuses that")
+    if md is None:
+        return
+
+    # store items: what kind of mod, fantasy brands
+    own_brands = {(b.get("name") or "").strip().upper(): b for b in md.iter("brand")}
+    kinds = set()
+    for e in md.iter("storeItem"):
+        item = (e.get("xmlFilename") or "").strip().replace("\\", "/")
+        if item not in files:
+            continue
+        try:
+            x = ET.parse(os.path.join(root, item)).getroot()
+        except ET.ParseError:
+            continue
+        kinds.add("placeable" if x.tag == "placeable" else "vehicle")
+        brand = (x.findtext("storeData/brand") or "").strip().upper()
+        if brand and brand in own_brands:
+            err(f"{item}: brand {brand} is a brand of the mod's own; GIANTS' guidelines don't allow fantasy "
+                "brands: use LIZARD (or the real brand if the game has it)")
+    for b in own_brands.values():
+        img = (b.get("image") or "").strip().replace("\\", "/")
+        dds = img[:-4] + ".dds" if img.lower().endswith(".png") else img
+        if dds in files:
+            check_dds_image(root, dds, "brand icon", (512, 256), (b"DXT5", b"DX10"), "BC3 (DXT5) or BC7")
+    if not kinds:
+        kinds.add("script")
+
+    # descriptions: in every language the mod speaks, and GIANTS' template for its kind
+    desc = md.find("description")
+    if desc is None:
+        return
+    have = {d.tag for d in desc if (d.text or "").strip()}
+    missing = sorted(mod_languages(root, md, files) - have)
+    if missing:
+        err(f"the mod has texts in {', '.join(missing)} but no description in them; GIANTS' guidelines want the "
+            "description in every language the mod supports")
+    has_actions = any(True for _ in md.iter("action"))
+    for kind in sorted(kinds):
+        if kind == "script" and not has_actions:
+            continue
+        for lang, labels in zip(("en", "de"), TEMPLATE[kind]):
+            text = desc.findtext(lang) or ""
+            for label in labels:
+                if not re.search(r"(?m)^\W*(?:" + label + ")", text):
+                    err(f"modDesc.xml description/{lang} has no '{label.split('|')[0]}' line; GIANTS' "
+                        f"description template for {kind} mods asks for it (see the CI README)")
+
+    # ModHub screenshots: modhub/screenshots/, unedited in-game shots
+    shots_dir = os.path.join(root, "modhub", "screenshots")
+    shots = sorted(f for f in os.listdir(shots_dir) if f.lower().endswith((".jpg", ".jpeg", ".png"))) \
+        if os.path.isdir(shots_dir) else []
+    if not shots:
+        warn("no ModHub screenshots in modhub/screenshots/ (at least 3, 1600x900, unedited in-game shots, "
+             "the first without UI)")
+        return
+    if len(shots) < 3:
+        err(f"modhub/screenshots/ has {len(shots)} screenshot(s); ModHub wants at least 3")
+    try:
+        from PIL import Image
+    except ImportError:
+        return
+    for s in shots:
+        with Image.open(os.path.join(shots_dir, s)) as im:
+            if im.size != SCREENSHOT_SIZE:
+                err(f"modhub/screenshots/{s} is {im.size[0]}x{im.size[1]}; ModHub screenshots are 1600x900")
+
+
 def lua_code_only(src):
     """The Lua source with comments and string contents blanked out (line numbers kept)."""
     out, i, n = [], 0, len(src)
@@ -440,11 +570,13 @@ def check_modhub(root, files, md):
                 if (w, h) != (512, 512):
                     err(f"the mod icon {dds} is {w}x{h}; ModHub wants 512x512")
 
-    # shop images (storeData/image): not the mod icon file, at most 3 mipmaps (TestRunner StoreItemCollector)
+    # shop images (storeData/image): not the mod icon file; GIANTS' FS25 guidelines: store_*.dds, 512x512,
+    # BC3 (DXT5) or BC7 (DX10 header), without mipmaps
     icon_file = None
     if md is not None and (md.findtext("iconFilename") or "").strip():
         i = md.findtext("iconFilename").strip()
         icon_file = (i[:-4] + ".dds" if i.lower().endswith(".png") else i).lower()
+    seen = set()
     for f in files:
         if ext_of(f) != ".xml":
             continue
@@ -460,11 +592,12 @@ def check_modhub(root, files, md):
             dds = ref[:-4] + ".dds" if ref.lower().endswith(".png") else ref
             if icon_file and dds.lower() == icon_file:
                 err(f"{f}: the shop image {ref} is the mod icon too; ModHub wants a separate store_*.dds")
-            info = dds_info(os.path.join(root, dds)) if dds in files else None
-            if info is not None and info[1] > 3:
-                # TestRunner's StoreItemCollector refused 8-10 mipmaps on some shop images and passed 4-8 on
-                # others (Nov 2026): a warning; TestRunner on the server decides
-                warn(f"the shop image {dds} has {info[1]} mipmaps; ModHub's TestRunner may want at most 3")
+            if dds in seen or dds not in files:
+                continue
+            seen.add(dds)
+            check_dds_image(root, dds, "shop image", (512, 512), (b"DXT5", b"DX10"), "BC3 (DXT5) or BC7")
+
+    check_guidelines(root, files, md)
 
     for f in files:
         e = ext_of(f)
@@ -634,6 +767,8 @@ def main():
     global MAX_FILES, MODHUB
     MAX_FILES = a.max_files
     MODHUB = not a.no_modhub
+    global ZIP_NAME
+    ZIP_NAME = a.name or os.environ.get("MOD_NAME") or os.path.basename(root)
 
     if a.command == "version":
         print(moddesc_version(read_moddesc(root)))

@@ -115,8 +115,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Lua 5.1 (lupa)
-        run: python3 -m pip install --quiet lupa
+      - name: Install Lua 5.1 (lupa) and Pillow (screenshot check)
+        run: python3 -m pip install --quiet lupa pillow
 
       # The game runs GIANTS' Lua 5.1 (with `continue`): newer syntax (goto, //, bit operators)
       # stops the mod from loading.

@@ -43,6 +43,45 @@ server for every test build (dtm-server `deploy-mods.ps1`) and locally with `_to
 
 Mods that never go to ModHub (the forks) set `modhub: false`.
 
+## GIANTS' FS25 ModHub guidelines
+
+Every DTM mod follows GIANTS' [ModHub Guidelines - Farming Simulator 25](https://forum.giants-software.com/viewtopic.php?p=1628568)
+(updated 19.03.26). ModHub's data check rejects a mod on these before anyone plays it. The CI enforces what can be
+checked from the files (errors):
+
+- **Shop images** (`store_*.dds`): 512x512, BC3 (DXT5) or BC7, **without mipmaps**. **Brand icons** (`brand_*.dds`):
+  512x256, BC3/BC7, without mipmaps. **Mod icon** (`icon_*.dds`): 512x512, BC1 (DXT1), without mipmaps.
+- **No fantasy brands**: a brand defined by the mod itself can't sell its items; use `LIZARD` or the real brand.
+- **Zip name**: `FS25_` + English letters, digits, `_`; no version number. A modder tag only as up to 3
+  characters right after `FS25_` (`FS25_DTMSearchables`).
+- **Description templates** (section 5), as lines at the start of the description, in English and German:
+  - vehicles/equipment: `Category:` `Price:` (and `Power:` `Required power:` `Max. speed:` `Working width:`
+    `Working speed:` `Capacity:` where they apply); German `Shopkategorie:` `Preis:` `Leistung:`
+    `Benötigte Leistung:` `Höchstgeschwindigkeit:` `Arbeitsbreite:` `Arbeitsgeschwindigkeit:` `Kapazität:`
+  - placeables/productions: `Category:` `Price:` `Monthly upkeep:` (`Production recipe:` `Configurations:`);
+    German `Kategorie:` `Preis:` `Monatliche Unterhaltskosten:` (`Produktionsrezepte:` `Konfigurationen:`)
+  - script mods with keys: `Description:` `Hotkeys:` (keyboard/mouse and controller) `GitHub:`; German
+    `Beschreibung:` `Tastenkombinationen:` `GitHub:`
+  - a pack repeats the block per item, the item's title above its `Category:` line.
+- **A description in every language the mod supports** (every language of its l10n texts).
+- **ModHub screenshots** in `modhub/screenshots/` (not shipped): at least 3, **1600x900**; a warning if there are none.
+
+Checked by hand (the CI can't see these):
+
+- **No modder references** anywhere but the zip's 3-character tag and `<author>`: no DTM, DTM Mods, dtmmods.com,
+  PropaineX, Fennell in titles, descriptions, in-game texts, textures, icons or screenshots. (ModHub rejected
+  Digital DTM for this; it is now Better Digital Display.)
+- **Icons and screenshots are unedited game images**: "zero tolerance towards AI created imagery or modified in
+  any other way outside of the game". No caption bars, frames, logos or added text on screenshots; the first one
+  without UI; machinery shown at work within the first three; ideally a clean base-game setting.
+- **The mod icon follows GIANTS' standard**: GIANTS' ModHub background (`_tools/modhub/modIcon_background.png`,
+  from GIANTS' FS Icon Generator 25) with the model's render on it, or for a script mod a simple picture and the
+  English title. `_brand/tools/make_icons.py --modhub` / `--modhub-render` make them; GIANTS' FS Icon Generator 25
+  (gdn.giants-software.com) renders vehicles and placeables in its Mod Icon mode.
+- **Dependencies**: a mod or DLC the mod needs is in `<dependencies>` and named in the ModHub submission comment.
+- **Updates on ModHub**: a meaningful changelog; minor updates at least 4 weeks apart; uploaded as
+  `<live zip name>_update.zip`.
+
 ## Releasing
 
 Raise `<version>` in `modDesc.xml` and push to main. That's all: when the version has no tag yet, the build
