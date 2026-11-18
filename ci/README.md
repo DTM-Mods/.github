@@ -97,6 +97,7 @@ tags the commit `v<version>` and publishes a **pre-release** (a test build):
 - dtmmods.com shows the new version within about 15 minutes
 - the DTM server swaps the zip into `/FTPness` (the old one goes to `/archive`), if TestRunner passed and the
   mod is live already; players get it after the next server restart
+- the mod's page on [dtmmods.itch.io](https://dtmmods.itch.io) gets the zip within about 30 minutes (see below)
 
 Pushing a tag by hand (`git tag v1.2.1.0`, `git push origin v1.2.1.0`) still works and also makes a pre-release.
 
@@ -125,6 +126,23 @@ Every mod repo has the same `build.yml`; only the settings under `with:` differ.
 | `auto-release` | AutoDrive, Courseplay, Better Contracts | `false`: a new modDesc version doesn't release itself; push a tag by hand. Always off with `version-suffix`. |
 | `prerelease` | nobody | `false`: releases go straight out as full releases (skipping the test build) |
 | `test-tag` | everyone | Set by the Run workflow button (see above) |
+
+## itch.io
+
+`.github/workflows/itch-sync.yml` (in this repository) keeps [dtmmods.itch.io](https://dtmmods.itch.io) up to date.
+Every 30 minutes, `ci/itch_sync.py` compares the newest **full** release of each mod in [`ci/itch.json`](itch.json)
+with the version on its itch.io page. When the GitHub release is newer, it uploads the release zip with butler:
+the zip as it is, under its own name (`--no-auto-unzip`), on the channel `fs25-mod`, with the release version.
+Pre-releases (test builds) never go to itch.
+
+- **A new mod on itch.io:** create its page once on itch.io (Classification: Game mods, Kind: Downloadable), with
+  the project URL from `ci/itch.json` (add a line there for a new mod). The next run uploads the current release.
+  Until the page exists, the mod is skipped. The page text, pictures and price are set on itch.io by hand.
+- **Not on itch:** leave the mod out of `ci/itch.json` (the forks and private repos are left out).
+- **Run it now:** **Actions** > **itch.io sync** > **Run workflow**: one repo (`FS25_Searchables`) or all, and
+  **dry run** to only see what it would do. The run's summary lists every mod with both versions.
+- It needs the secret `BUTLER_API_KEY` in this repository: an API key of the dtmmods itch.io account (itch.io >
+  Settings > API keys), stored with `gh secret set BUTLER_API_KEY -R DTM-Mods/.github`. Without it the run does nothing.
 
 ## Other workflows in the mod repos
 
