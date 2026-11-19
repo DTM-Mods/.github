@@ -6,6 +6,7 @@ Shared checks and releases for every FS25 mod repository in DTM-Mods.
 |------|------------|
 | `../.github/workflows/fs25-mod.yml` | The reusable workflow. Each mod repo calls it from its own `.github/workflows/build.yml` |
 | `fs25_mod.py` | Checks the mod and builds the zip (run `python fs25_mod.py --help`) |
+| `discord_emojis.py` | The DTM Discord's custom emojis for every post (releases, test builds, issues, upstream, downloads), with the emoji table. The workflows download it from `main` (see below) |
 | `../workflow-templates/fs25-mod.yml` | The `build.yml` a new mod repo starts from: Actions tab > New workflow > "DTM FS25 mod" |
 
 ## Adding a new mod repository
@@ -141,3 +142,11 @@ Kind: Downloadable) and add a line to `ci/itch.json` with the page's address.
 The same in every repo: `discord-release.yml` (posts releases), `discord-issues.yml` (posts issues).
 The forks (AutoDrive, Better Contracts, Courseplay) also have `upstream-sync.yml`, and Courseplay has
 `upstream-watch.yml`, which watches the upstream projects of all three forks.
+
+Every Discord post puts one of the server's custom emojis at the start of a line (`E("update")` in the
+workflows). [`discord_emojis.py`](discord_emojis.py) maps each kind of post to emoji names, and holds the
+full form (`<a:name:id>`) of each emoji, because a webhook can't use the `:name:` shortcut. A name not in
+the table gets a plain Unicode emoji. When an emoji is uploaded again it gets a new id: send it with a
+backslash in front in the DTM Discord (`\:mod_update:`), copy what Discord shows and update its line.
+The server's scripts use the same table in `dtm-server/discord-emojis.ps1`: change both.
+`python ci/discord_emojis.py` shows what each kind of post gets.
