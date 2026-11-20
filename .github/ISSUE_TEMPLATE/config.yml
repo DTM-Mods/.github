@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: An idea or a wish
+    url: https://github.com/orgs/DTM-Mods/discussions/categories/ideas
+    about: Post it in DTM Mods Ideas, where everyone can vote on it. The most-voted ideas show on dtmmods.com/roadmap/.
   - name: Questions and chat
     url: https://discord.gg/2GTU9hAa3Q
     about: Ask PropaineX and Fennell on the DTM Discord.

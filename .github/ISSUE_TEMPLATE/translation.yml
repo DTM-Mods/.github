@@ -1,0 +1,32 @@
+name: Translation
+description: The mod's texts in your language (easiest from dtmmods.com/translate/)
+title: "Translation: "
+labels: [translation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for translating! The [translate page](https://dtmmods.com/translate/) fills this in for you: pick the mod and your language, translate the texts, press **Send**.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "German"
+    validations:
+      required: true
+
+  - type: textarea
+    id: texts
+    attributes:
+      label: The texts
+      description: Paste what the translate page made (it's on your clipboard), or attach the file it saved.
+      render: xml
+    validations:
+      required: true
+
+  - type: input
+    id: credit
+    attributes:
+      label: Name on the credits page (optional)
+      description: "Empty: your GitHub name. Write \"no\" to not be listed on dtmmods.com/credits/."
