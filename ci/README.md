@@ -137,6 +137,15 @@ The mods on [dtmmods.itch.io](https://dtmmods.itch.io) are uploaded through the 
 that isn't on itch yet (never pre-releases). A new mod on itch: create its page on itch.io (Classification: Game mods,
 Kind: Downloadable) and add a line to `ci/itch.json` with the page's address.
 
+## KingMods
+
+Our mods on [KingMods](https://www.kingmods.net/en/profile/dtmmods) are listed in [`kingmods.json`](kingmods.json)
+(page id and address per repository). KingMods has no API: a new page is made by hand on kingmods.net, then gets a
+line here. The server's `dtm-stats.ps1` (dtm-server) reads each page once a day for its download count and the
+version it offers; the admins' stats page shows both, and marks pages that offer an older version than the latest
+release. Most KingMods Download buttons lead to our GitHub zips, so its count partly overlaps GitHub's and is never
+added to the totals.
+
 ## Other workflows in the mod repos
 
 The same in every repo: `discord-release.yml` (posts releases), `discord-issues.yml` (posts issues).

@@ -1,0 +1,29 @@
+{
+  "_about": "Which mods have a page on KingMods (kingmods.net, profile dtmmods), and its id and address. dtm-server dtm-stats.ps1 reads each page once a day for its download count and the version it offers (the admins' stats page https://dtmmods.com/admin/). KingMods has no API: a new page is made by hand on kingmods.net; then add a line here. Key: the GitHub repository in DTM-Mods.",
+  "user": "dtmmods",
+  "mods": {
+    "FS25_AlpacaPRX500": {"id": 84568, "url": "https://www.kingmods.net/en/fs25/mods/84568/alpaca-prx500"},
+    "FS25_BananaRegrow": {"id": 84593, "url": "https://www.kingmods.net/en/fs25/mods/84593/banana-regrow"},
+    "FS25_Brandt_Landroller_591_Pro": {"id": 84570, "url": "https://www.kingmods.net/en/fs25/mods/84570/brandt-landroller-591a-standalone"},
+    "FS25_DeployablesAnywhere": {"id": 84571, "url": "https://www.kingmods.net/en/fs25/mods/84571/deployables-anywhere"},
+    "FS25_F1Toggle": {"id": 84573, "url": "https://www.kingmods.net/en/fs25/mods/84573/f1-toggle"},
+    "FS25_FarmInventory": {"id": 84579, "url": "https://www.kingmods.net/en/fs25/mods/84579/farm-inventory-pro-edition"},
+    "FS25_MassTreeExterminator": {"id": 84574, "url": "https://www.kingmods.net/en/fs25/mods/84574/mass-tree-exterminator"},
+    "FS25_ModReveal": {"id": 84572, "url": "https://www.kingmods.net/en/fs25/mods/84572/mod-reveal"},
+    "FS25_MonthlyExpenseSheet": {"id": 84578, "url": "https://www.kingmods.net/en/fs25/mods/84578/monthly-expense-sheet-pro-edition"},
+    "FS25_NoAICollisions_ProEdition": {"id": 84577, "url": "https://www.kingmods.net/en/fs25/mods/84577/no-ai-collisions-pro-edition"},
+    "FS25_PRX9000": {"id": 84587, "url": "https://www.kingmods.net/en/fs25/mods/84587/pro-x-prx-silo-extensions-pro-edition"},
+    "FS25_PX150XL": {"id": 84589, "url": "https://www.kingmods.net/en/fs25/mods/84589/px150-xl-windrower-pro-edition"},
+    "FS25_PalletDepot": {"id": 84576, "url": "https://www.kingmods.net/en/fs25/mods/84576/logistics-hub"},
+    "FS25_ParkingBrake_ProEdition": {"id": 84575, "url": "https://www.kingmods.net/en/fs25/mods/84575/parking-brake-pro-edition"},
+    "FS25_PigBarnWithRobot": {"id": 84590, "url": "https://www.kingmods.net/en/fs25/mods/84590/pig-barn-with-feeding-robot-gea"},
+    "FS25_PlayerTradingPlus": {"id": 84585, "url": "https://www.kingmods.net/en/fs25/mods/84585/player-trading-pro-edition"},
+    "FS25_RecoupMoney": {"id": 84581, "url": "https://www.kingmods.net/en/fs25/mods/84581/recoup-money"},
+    "FS25_RoadsideStand": {"id": 84584, "url": "https://www.kingmods.net/en/fs25/mods/84584/roadside-stand"},
+    "FS25_RopaTiger6S_ProEdition": {"id": 84588, "url": "https://www.kingmods.net/en/fs25/mods/84588/ropa-tiger-6s-pro-edition"},
+    "FS25_ScreenshotStudio": {"id": 84586, "url": "https://www.kingmods.net/en/fs25/mods/84586/dtm-screenshot-studio"},
+    "FS25_Searchables": {"id": 84569, "url": "https://www.kingmods.net/en/fs25/mods/84569/searchables"},
+    "FS25_ServerLagWatch": {"id": 84583, "url": "https://www.kingmods.net/en/fs25/mods/84583/server-lag-watch"}
+  },
+  "_not_listed": "Not on KingMods yet (2026-11-20): FS25_ADAddOn, FS25_AutoDrive, FS25_BetterContracts, FS25_Courseplay, FS25_DigitalDTM, FS25_ModMux, FS25_ProEdition_BoxTruck."
+}
