@@ -6,7 +6,7 @@ of each emoji the posts use; a post looks its emoji up by name. A name that isn'
 the plain Unicode emoji instead, so a post never breaks.
 
 An emoji that is deleted and uploaded again gets a new id: update its line here (and in
-dtm-server/discord-emojis.ps1). To get the full forms, send the emojis with a backslash in front in
+dtm-server/discord-emojis.ps1 and EMO in dtmmods.com announce.js, the announcement builder). To get the full forms, send the emojis with a backslash in front in
 any channel of the DTM Discord ( \\:mod_update: ) and copy what Discord shows ( <a:mod_update:123> ).
 
 Custom emojis show in message text, embed descriptions and field values, NOT in embed titles,
