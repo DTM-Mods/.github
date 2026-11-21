@@ -213,7 +213,10 @@ jobs:
             echo "::warning title=No release notes for $VERSION::Add a '## $VERSION' section to PATCH_NOTES.md (or RELEASE_NOTES.md / CHANGELOG.md, or 'Changelog $VERSION:' in the modDesc description) before tagging v$VERSION. Without it the release page only lists commits."
           fi
 
+      # The zip as a download on the run's page. Only a convenience: when the org's artifact storage is
+      # full (it was on 2026-11-21) the build and the release go on without it.
       - uses: actions/upload-artifact@v7
+        continue-on-error: true
         with:
           name: ${{ env.MOD_NAME }}-${{ steps.mod.outputs.build_version }}-${{ github.sha }}
           path: dist/*.zip*
