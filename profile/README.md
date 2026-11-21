@@ -69,6 +69,7 @@ Tools for making mods. Single player only, they never go on a server.
 | | Tool | By | Latest |
 | :-: | --- | --- | --- |
 | <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_ScreenshotStudio.png" width="40" alt=""> | **[DTM Screenshot Studio](https://github.com/DTM-Mods/FS25_ScreenshotStudio)**: the game takes the ModHub screenshots of your mod | Fennell | <a href="https://github.com/DTM-Mods/FS25_ScreenshotStudio/releases/latest"><img src="https://img.shields.io/github/v/release/DTM-Mods/FS25_ScreenshotStudio?label=latest&color=D9A441&style=flat-square" alt="Latest release"></a> |
+| <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/icons/FS25_VideoStudio.png" width="40" alt=""> | **[DTM Video Studio](https://github.com/DTM-Mods/FS25_VideoStudio)**: the game films your mod, the tools cut and score the video | Fennell | <a href="https://github.com/DTM-Mods/FS25_VideoStudio/releases"><img src="https://img.shields.io/github/v/release/DTM-Mods/FS25_VideoStudio?include_prereleases&label=testing&color=7FA48A&style=flat-square" alt="Newest test build"></a> |
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/DTM-Mods/.github/main/assets/installation.jpg" alt="Installation" width="100%">
