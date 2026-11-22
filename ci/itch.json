@@ -3,18 +3,13 @@
   "user": "dtmmods",
   "mods": {
     "FS25_Searchables": {"project": "searchables"},
-    "FS25_DigitalDTM": {"project": "better-digital-display"},
     "FS25_PalletDepot": {"project": "logistics-hub", "zip": "FS25_LogisticsHub.zip"},
-    "FS25_ModMux": {"project": "modmux"},
-    "FS25_ModReveal": {"project": "mod-reveal"},
     "FS25_F1Toggle": {"project": "f1-toggle"},
     "FS25_DeployablesAnywhere": {"project": "deployables-anywhere"},
     "FS25_RecoupMoney": {"project": "recoup-money"},
     "FS25_RoadsideStand": {"project": "roadside-stand"},
-    "FS25_MassTreeExterminator": {"project": "mass-tree-exterminator"},
     "FS25_BananaRegrow": {"project": "banana-regrow"},
     "FS25_PigBarnWithRobot": {"project": "pig-barn-with-feeding-robot-gea"},
-    "FS25_ScreenshotStudio": {"project": "screenshot-studio", "zip": "FS25_ScreenshotStudio.zip"},
     "FS25_FarmInventory": {"project": "farm-inventory-plus"},
     "FS25_MonthlyExpenseSheet": {"project": "monthly-expense-sheet-pro-edition"},
     "FS25_ServerLagWatch": {"project": "server-lag-watch"},
@@ -26,9 +21,22 @@
     "FS25_PX150XL": {"project": "px150-xl-windrower-pro-edition"},
     "FS25_PRX9000": {"project": "pro-x-prx-silo-extensions-pro-edition"},
     "FS25_AlpacaPRX500": {"project": "alpaca-prx500"},
-    "FS25_Brandt_Landroller_591_Pro": {"project": "brandt-landroller-591a-standalone"},
-    "FS25_AssistedTreeFelling": {"project": "assisted-tree-felling"},
-    "FS25_ADAddOn": {"project": "autodrive-add-on"}
+    "FS25_Brandt_Landroller_591_Pro": {"project": "brandt-landroller-591a-standalone"}
   },
-  "_not_listed": "The forks of other teams' mods (FS25_AutoDrive, FS25_Courseplay, FS25_BetterContracts) and the private FS25_ProductionBoost2510. Add them here if they should go to itch too."
+  "_to_create": {
+    "_about": "Mods that have no page on itch.io yet (checked against the itch dashboard on 2026-11-21). Create the page on itch.io (Classification: Game mods, Kind: Downloadable) with this address, then move the line up into mods. While a mod is listed in mods without a page, every hourly upload run fails on it.",
+    "FS25_DigitalDTM": {"project": "better-digital-display"},
+    "FS25_ModMux": {"project": "modmux"},
+    "FS25_ModReveal": {"project": "mod-reveal"},
+    "FS25_MassTreeExterminator": {"project": "mass-tree-exterminator"},
+    "FS25_ScreenshotStudio": {"project": "screenshot-studio", "zip": "FS25_ScreenshotStudio.zip"},
+    "FS25_VideoStudio": {"project": "video-studio"},
+    "FS25_AutoAdmin": {"project": "auto-admin"},
+    "FS25_AssistedTreeFelling": {"project": "assisted-tree-felling"},
+    "FS25_ADAddOn": {"project": "autodrive-add-on"},
+    "FS25_InputAlert": {"project": "input-alert"},
+    "FS25_ReactiveMarkets": {"project": "reactive-markets"},
+    "FS25_ProductionBoost2510": {"project": "production-boost"}
+  },
+  "_not_listed": "The forks of other teams' mods (FS25_AutoDrive, FS25_Courseplay, FS25_BetterContracts): the originals have their own homes. The private FS25_TatraPhoenix_AgroPlus."
 }

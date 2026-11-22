@@ -10,6 +10,12 @@
 </p>
 
 <p align="center">
+  <a href="https://www.youtube.com/@DTMMods"><img src="https://img.shields.io/badge/YouTube-videos-1F4D3A?style=for-the-badge&logo=youtube&logoColor=F4F1E8" alt="DTM Mods on YouTube"></a>
+  <a href="https://dtmmods.itch.io"><img src="https://img.shields.io/badge/itch.io-our%20mods-1F4D3A?style=for-the-badge&logo=itchdotio&logoColor=F4F1E8" alt="DTM Mods on itch.io"></a>
+  <a href="https://www.kingmods.net/en/profile/dtmmods"><img src="https://img.shields.io/badge/KingMods-our%20mods-1F4D3A?style=for-the-badge" alt="DTM Mods on KingMods"></a>
+</p>
+
+<p align="center">
   <b>Farming Simulator 25 mods, built and tested on our own server.</b><br>
   Quality-of-life scripts, Pro Edition machines and placeables, and the forks we keep running.
 </p>
@@ -81,6 +87,11 @@ Download the zip from the mod's **Latest** release and put it, without unzipping
 ### Bugs and requests
 
 Open an issue in the mod's repository, or ask us on [Discord](https://discord.gg/2GTU9hAa3Q). Please attach your `log.txt` and say which mod version you're on.
+
+### Where else to find us
+
+Videos of the mods are on [YouTube](https://www.youtube.com/@DTMMods). The same zips are also on
+[itch.io](https://dtmmods.itch.io) and [KingMods](https://www.kingmods.net/en/profile/dtmmods).
 
 ### Support DTM Mods
 

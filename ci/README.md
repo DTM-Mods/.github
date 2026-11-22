@@ -6,6 +6,8 @@ Shared checks and releases for every FS25 mod repository in DTM-Mods.
 |------|------------|
 | `../.github/workflows/fs25-mod.yml` | The reusable workflow. Each mod repo calls it from its own `.github/workflows/build.yml` |
 | `fs25_mod.py` | Checks the mod and builds the zip (run `python fs25_mod.py --help`) |
+| `check_repo.py` | Checks this repository itself: scripts, YAML, the lists below, the icons. `../.github/workflows/check.yml` runs it on every push, and builds four real mods with the pushed `fs25_mod.py` |
+| `itch.json`, `kingmods.json`, `modhub.json` | Where each mod is published besides GitHub (see the sections below) |
 | `discord_emojis.py` | The DTM Discord's custom emojis for every post (releases, test builds, issues, upstream, downloads), with the emoji table. The workflows download it from `main` (see below) |
 | `../workflow-templates/fs25-mod.yml` | The `build.yml` a new mod repo starts from: Actions tab > New workflow > "DTM FS25 mod" |
 
@@ -136,6 +138,10 @@ The mods on [dtmmods.itch.io](https://dtmmods.itch.io) are uploaded through the 
 [`ci/itch.json`](itch.json) lists the mods and their itch pages; the script uploads each mod's newest **full** release
 that isn't on itch yet (never pre-releases). A new mod on itch: create its page on itch.io (Classification: Game mods,
 Kind: Downloadable) and add a line to `ci/itch.json` with the page's address.
+
+Only list a mod under `mods` once its page exists: the upload runs every hour (`_tools/dtm_sync_sites.py`) and fails
+on every listed mod that has no page. Mods still waiting for a page are under `_to_create`, with the address the page
+should get; `check.yml` fails when a page under `mods` doesn't exist.
 
 ## KingMods
 

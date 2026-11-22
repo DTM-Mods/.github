@@ -1,0 +1,78 @@
+# Checks this repository itself. Every DTM mod builds with ci/fs25_mod.py and the shared workflow from
+# main here, so a mistake in them breaks every mod's build at once. On every push and pull request:
+#   - repo:  ci/check_repo.py (the Python files compile, the YAML is valid, the lists in ci/ and the
+#            icons match the org profile, every itch.io page in itch.json exists)
+#   - mods:  this commit's ci/fs25_mod.py checks and builds a few real mods, the same steps as the shared
+#            workflow (.github/workflows/fs25-mod.yml). They are green in their own repos, so a failure
+#            here comes from a change in this repository.
+# Pushes to main go straight in, so this tells you within a minute or two, not before: when it turns
+# red, fix or revert before the next mod push. Once a week it also runs by itself, which catches a
+# mod's build breaking for outside reasons (a new Python, lupa or Pillow).
+name: Check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "0 12 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repo:
+    name: Scripts, lists and icons
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install --quiet pyyaml
+      - name: Check the repository
+        run: python3 ci/check_repo.py --online --github
+      - name: Discord emoji table
+        run: python3 ci/discord_emojis.py
+
+  mods:
+    name: Build ${{ matrix.mod }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # a script mod, a placeable with textures, a vehicle with an i3d, and a fork (no ModHub rules)
+          - mod: FS25_F1Toggle
+          - mod: FS25_PRX9000
+          - mod: FS25_PX150XL
+          - mod: FS25_BetterContracts
+            flags: --no-modhub
+    steps:
+      - uses: actions/checkout@v7
+      - name: Get ${{ matrix.mod }}
+        uses: actions/checkout@v7
+        with:
+          repository: DTM-Mods/${{ matrix.mod }}
+          path: mod
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install Lua 5.1 (lupa) and Pillow
+        run: python3 -m pip install --quiet lupa pillow
+      - name: Lua 5.1 syntax
+        run: python3 ci/fs25_mod.py lua --root mod
+      - name: Check and build
+        run: |
+          version=$(python3 ci/fs25_mod.py version --root mod)
+          echo "${{ matrix.mod }} $version"
+          python3 ci/fs25_mod.py build --root mod --out dist --name "${{ matrix.mod }}" --max-files 128 ${{ matrix.flags }}
+          test -s "dist/${{ matrix.mod }}.zip"
+          python3 ci/fs25_mod.py notes "$version" --root mod
