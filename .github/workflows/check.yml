@@ -5,8 +5,11 @@
 #   - mods:  this commit's ci/fs25_mod.py checks and builds a few real mods, the same steps as the shared
 #            workflow (.github/workflows/fs25-mod.yml). They are green in their own repos, so a failure
 #            here comes from a change in this repository.
-# Pushes to main go straight in, so this tells you within a minute or two, not before: when it turns
-# red, fix or revert before the next mod push. Once a week it also runs by itself, which catches a
+# main only takes a commit that passed this check (ruleset "Checked before main"). So push to a branch
+# first, wait for the green tick, then move main up to that same commit:
+#     git push origin HEAD:refs/heads/next        (the check runs, about a minute)
+#     git push origin HEAD:main                   (refused until "Check passed" is green)
+# ci/push_checked.ps1 does both and waits in between. Once a week it also runs by itself, which catches a
 # mod's build breaking for outside reasons (a new Python, lupa or Pillow).
 name: Check
 
@@ -76,3 +79,16 @@ jobs:
           python3 ci/fs25_mod.py build --root mod --out dist --name "${{ matrix.mod }}" --max-files 128 ${{ matrix.flags }}
           test -s "dist/${{ matrix.mod }}.zip"
           python3 ci/fs25_mod.py notes "$version" --root mod
+
+  # The one result the "Checked before main" ruleset asks for: main only takes a commit after this is green.
+  passed:
+    name: Check passed
+    if: always()
+    needs: [repo, mods]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every job above succeeded
+        run: |
+          echo "repo: ${{ needs.repo.result }}, mods: ${{ needs.mods.result }}"
+          [ "${{ needs.repo.result }}" = "success" ] && [ "${{ needs.mods.result }}" = "success" ]

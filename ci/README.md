@@ -7,6 +7,7 @@ Shared checks and releases for every FS25 mod repository in DTM-Mods.
 | `../.github/workflows/fs25-mod.yml` | The reusable workflow. Each mod repo calls it from its own `.github/workflows/build.yml` |
 | `fs25_mod.py` | Checks the mod and builds the zip (run `python fs25_mod.py --help`) |
 | `check_repo.py` | Checks this repository itself: scripts, YAML, the lists below, the icons. `../.github/workflows/check.yml` runs it on every push, and builds four real mods with the pushed `fs25_mod.py` |
+| `push_checked.ps1` | How to push to `main` here: `main` only takes a commit that passed the check, so this pushes to the branch `next`, waits for the check and then moves `main` up |
 | `itch.json`, `kingmods.json`, `modhub.json` | Where each mod is published besides GitHub (see the sections below) |
 | `discord_emojis.py` | The DTM Discord's custom emojis for every post (releases, test builds, issues, upstream, downloads), with the emoji table. The workflows download it from `main` (see below) |
 | `../workflow-templates/fs25-mod.yml` | The `build.yml` a new mod repo starts from: Actions tab > New workflow > "DTM FS25 mod" |

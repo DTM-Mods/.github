@@ -42,8 +42,18 @@ So this repository checks itself ([`check.yml`](.github/workflows/check.yml)) on
 - every mod on the organization page has a 256x256 icon in `assets/icons/`
 - the pushed `ci/fs25_mod.py` checks and builds four real mods (a script mod, a placeable, a vehicle and a fork)
 
-Run the first three before pushing with `python ci/check_repo.py`. When the check turns red, fix or revert before
-the next mod is pushed.
+**`main` only takes a commit that passed this check** (the ruleset "Checked before main"). A plain `git push` to
+`main` is refused. Push the checked way instead:
+
+```
+.\ci\push_checked.ps1
+```
+
+It pushes your commit to the branch `next`, waits about a minute for the check, and moves `main` up to the same
+commit when it is green. When it is red, `main` stays as it was. A pull request works too. Run the first three checks
+yourself before pushing with `python ci/check_repo.py`.
+
+In an emergency an organization owner can switch the ruleset off for a moment: Settings > Rules > Rulesets.
 
 ## Adding a mod
 
